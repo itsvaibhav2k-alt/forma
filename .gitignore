@@ -10,3 +10,4 @@ coverage/
 !.env.example
 tmp/
 output/previews/
+output/releases/

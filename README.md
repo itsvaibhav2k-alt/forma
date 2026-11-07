@@ -3,8 +3,8 @@
 A local browser workbench for a one-brace truss experiment, an independent package
 cost comparison, and a selected-trial decision sheet.
 
-**Phases 1–5 are implemented.** Phase 5's native PDF acceptance check remains a
-manual handoff. Choose a load position and brace, commit your
+**Phases 1–5 are implemented; Phase 6 release tooling is ready.** Native PDF and
+presentation-laptop acceptance remain manual handoffs. Choose a load position and brace, commit your
 prediction, then compare all four placements using the tested structural engine.
 Drag the load or use the keyboard to retest the same brace. Saved trials preserve
 their original results for the session. The bridge shows original/modified
@@ -32,6 +32,9 @@ npm run check     # tests, strict TypeScript checking, production build
 npm run test:watch
 npm run bench:structures  # five-design calculation timing, no browser UI
 npm run prepare:report-qa # prepares three frozen HTML/JSON cases for manual PDF checks
+npm run test:release:network # optional real-loopback launcher checks; requires port permission
+npm run release:prepare # checks, builds, benchmarks and packages a portable candidate
+npm run release:verify  # verifies the latest candidate, or append -- /path/to/extracted/folder
 npm run build
 npm start        # serves dist at http://127.0.0.1:4173
 ```
@@ -101,6 +104,8 @@ the complete JSON snapshot. This download is archival; importing it is not imple
 - [Phase 3 acceptance and handoff](docs/phase-3.md): interaction, trial state, live integration and browser checks.
 - [Phase 4 acceptance and handoff](docs/phase-4.md): cost formulas, inputs, validation, domain isolation and report snapshot adapter.
 - [Phase 5 acceptance and handoff](docs/phase-5.md): frozen reports, print layout, export checks and the manual PDF checklist.
+- [Phase 6 release record](docs/phase-6.md): measured evidence, portable packaging and pending release gates.
+- [Presentation-laptop checklist](docs/release-checklist.md) and [90-second demo script](docs/demo-script.md).
 - [Ownership and merge order](docs/merge-plan.md): the next independent work streams.
 - [Full phased plan](output/pdf/Forma_Phased_Build_and_Design_Review.pdf): the planning PDF.
 
@@ -124,8 +129,9 @@ The boundary tests protect that separation.
 
 ## Next work
 
-The next work is the **manual Phase 5 PDF check**, then **Phase 6 (integrated
-release checks, offline rehearsal and freeze)**. Keep one
+The next work is **presentation-laptop acceptance**: native PDF, portable launcher,
+offline keyboard flow, outside testing, latency and two timed rehearsals. The final
+release commit/archive freeze follows those checks. Keep one
 writer per module and put any shared-contract changes in a preceding
 integration-owned PR. No later-phase function returns a fake successful result.
 
@@ -134,3 +140,29 @@ snapshot in `itsvaibhav2k-alt/forma`. It does not share commit ancestry with tha
 repository's `main`, which contains the other agent's calculation engines.
 Reconcile the contracts and numerical defaults before selectively integrating
 the implementations. No engine code from `main` is included in this snapshot.
+
+## Move the candidate to another laptop
+
+Run `npm run release:prepare` on the development machine. It creates a uniquely
+named `.tar.gz`, checksum and extracted folder under ignored `output/releases`;
+`latest.json` identifies the latest output. The manifest records the source commit,
+dirty-source flag, source fingerprint, automated checks, benchmark and asset hashes.
+
+Install a compatible Node runtime on the presentation laptop while online, copy
+and fully extract the archive, then run these commands inside the extracted folder:
+
+```sh
+node verify.mjs
+node serve.mjs
+```
+
+Open `http://127.0.0.1:4173/` and keep the terminal running. The bundle needs no npm
+install or `node_modules`. It binds loopback only, requires an explicit free port
+and restricts runtime resources/connections to its own origin. Do not open
+`dist/index.html` directly. Reload clears session data.
+
+This is a **candidate**, not a certified release. The launcher is covered by
+in-memory tests; actual socket startup was blocked by sandbox permissions and the
+escalation was declined. Complete the included checklist on the actual laptop,
+including native printing and physical internet disconnection. After acceptance,
+commit the source, package a clean tree and rehearse that exact final archive.

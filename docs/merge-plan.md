@@ -103,6 +103,24 @@ financial result against a fresh calculation, so stale result/input pairs fail.
 See [Phase 5 acceptance](phase-5.md), especially the remaining manual PDF gate,
 before declaring the release ready.
 
+## Phase 6 handoff
+
+Release tooling and development-machine verification are prepared on `phases`.
+The presentation laptop is a different machine. Human/device acceptance is still
+pending, so 6.3 has not declared a release freeze or created a tag.
+
+| Subphase | Prerequisite | Deliverables | Current evidence / remaining gate |
+| --- | --- | --- | --- |
+| 6.1 | 2.3 + 3.3 + 4.3 + 5.3 | Integrated suite, release audit/launcher tests and performance record | App and in-memory tests pass; development keyboard flow and Node benchmark pass; native PDF, outside tester and target-machine timings pending |
+| 6.2 | 6.1 | Portable candidate, hashes, local-only asset audit, dependency-free launcher, instructions | Package integrity checked; actual launcher socket test, target-machine cold start, physical disconnection and offline print pending |
+| 6.3 | 6.2 | Fixed-candidate metadata, demo script, checklist and submission/disclosure draft | Final clean commit/archive, two timed rehearsals and human submission details pending |
+
+These supporting files can be reviewed while prerequisite manual gates remain
+open. Do not equate preparing the tooling with passing those gates. No new app
+features, solver/cost formulas, dependencies or shared contracts are introduced.
+Source tests and release-script tests are explicitly separated in the runner.
+See [Phase 6 evidence](phase-6.md) and [the acceptance checklist](release-checklist.md).
+
 ## Later integration order
 
 1. 2.1 → 2.2 solver → 2.3 ranking.

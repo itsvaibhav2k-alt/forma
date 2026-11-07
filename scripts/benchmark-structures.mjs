@@ -26,7 +26,7 @@ try {
     operation: 'baseline + four independent candidate solves + validation + immutable ranking snapshot',
     medianMs: percentile(0.5), p95Ms: p95, p99Ms: percentile(0.99), maxMs: timings.at(-1),
     p95TargetMs: 8, meetsTarget: p95 < 8,
-    scope: 'Local Node/Vite module benchmark; browser interaction latency is a Phase 3 integration check.',
+    scope: 'Local Node/Vite module benchmark; presentation-laptop and browser input-to-paint latency remain separate Phase 6 checks.',
   }, null, 2));
 } finally {
   await server.close();
