@@ -6,8 +6,8 @@ const COPY: Record<ExplainerView, Block> = {
   experiment: {
     lead: 'Forma is a small tabletop experiment. A 240 mm truss bridge carries a 10 N load. You may add exactly one diagonal brace, in one of four panels. The question: which panel stiffens the bridge most for the load you choose?',
     steps: [
-      'Position the load at B1, B2 or B3, the three bottom joints that can carry it. Drag the arrow in the drawing, use the arrow keys, or pick a tile.',
-      'Choose a panel, P1 to P4. Each adds one brace of the same length. The dashed line previews it.',
+      'Position the load at B1, B2 or B3, the three bottom joints that can carry it. In Structural mode, drag the load arrow or use its arrow keys. The load tiles work in either mode.',
+      'Choose a panel, P1 to P4, using the brace controls in either mode. Each adds one brace of the same length. Structural mode also lets you select a panel in the drawing.',
       'Commit your prediction. The app then solves the bridge four times, once per panel, and reveals how far the loaded joint moves with your brace versus the other three. Nothing is shown before you commit, so it is a genuine prediction.',
       'Move the load to retest the same brace, or start another prediction to try a different panel. Every committed trial is saved below and can be reopened read-only.',
     ],
@@ -15,7 +15,7 @@ const COPY: Record<ExplainerView, Block> = {
       ['Deflection', 'How far the loaded joint moves down, in millimetres. Lower is better.'],
       ['Reduction', 'How much less the joint moves with that brace than with no brace at all.'],
       ['Rank', '1 of 4 is the best panel for that load. Ties share a rank.'],
-      ['3D view and drawing', 'The shaded model and the line drawing show the same bridge. The drawing is where you drag the load and click panels.'],
+      ['Assembly and Structural', 'Two representations of the same selected load and brace. Structural supports direct editing in the drawing. Assembly is read-only; the controls beside it still work.'],
     ],
     limits: 'This is a linear-elastic model of one side of the bridge with ideal pin joints. It predicts stiffness under this one load, not strength, and it is not a safety rating.',
   },
