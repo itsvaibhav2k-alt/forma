@@ -43,5 +43,7 @@
   .decision-sheet { width:7.5in; margin:0; padding:0.15in; box-shadow:none; }
   .decision-sheet section, .sheet-header, .sheet-footer, .sheet-cost-table tr { break-inside:avoid; }
   .sheet-cost-table { color:#111!important; }
+  .report-preview[data-print-fits="false"] .report-paper-scroll { display:none!important; }
+  .report-preview[data-print-fits="false"] .report-overflow { display:block!important; }
   body:has(.app-shell) main:not(:has(.report-preview)):not(:has(.template-preview))::after { content:'Open a captured decision sheet or assembly template in Forma before printing.'; display:block; padding:24px; }
 }

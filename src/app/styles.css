@@ -204,6 +204,15 @@ summary { cursor: pointer; font-weight: 550; }
 .analysis-error h2 { font-size: 17px; font-weight: 600; color: #873e29; }
 .analysis-error p { margin-top: 8px; font-size: 12px; }
 .analysis-error button { margin-top: 15px; }
+.model-view { margin: 0; padding: 14px 18px 6px; border-bottom: 1px solid #e4e7df; background: radial-gradient(ellipse at 50% 55%, #fffefa 10%, #f7f8f1 70%, #f1f3ec 100%); }
+.model-view-controls { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+.model-view-controls button { border: 1px solid #d5dece; background: #fcfcf9; color: #62745a; border-radius: 4px; padding: 7px 11px; font-size: 11px; }
+.model-view-controls button[aria-pressed="true"] { background: #e3ebdc; border-color: #768e65; color: #285d48; font-weight: 600; }
+.model-view-svg { display: block; width: 100%; max-width: 900px; height: auto; margin: 0 auto; user-select: none; }
+.model-view figcaption { font-size: 11px; color: #60705b; text-align: center; padding: 6px 0 8px; }
+.verdict { padding: 24px 24px 0; }
+.verdict-lead { font-size: clamp(20px, 2.2vw, 27px); font-weight: 550; letter-spacing: -0.5px; line-height: 1.25; color: #203c32; }
+.verdict-note { font-size: 13px; color: #65735d; margin-top: 6px; }
 @media (max-width: 1000px) {
   .app-shell { padding: 0 30px; }
   .site-header { gap: 15px; }
@@ -241,6 +250,8 @@ summary { cursor: pointer; font-weight: 550; }
   .deformation-legend { padding-left: 0; }
   .prediction-note { align-items: flex-start; }
   .hidden-badge { display: none; }
+  .model-view { padding: 10px 8px 4px; }
+  .verdict { padding: 18px 18px 0; }
   .result-metrics { padding: 20px 18px; gap: 18px 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .result-metrics > div { padding: 0; border: 0; }
   .result-metrics .gain-metric { grid-column: 1 / -1; padding-top: 15px; border-top: 1px solid #e4e7df; }

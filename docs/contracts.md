@@ -1,3 +1,7 @@
+> Combined implementation: app/state contracts below remain the phases contracts.
+> Main’s pinned numerical engines are accessed through private adapters; see
+> [engine provenance and policy reconciliation](main-engine-integration.md).
+
 # Phase 1.2 — Shared contracts and state ownership
 
 The source of truth is `src/shared`. Its barrel exports contracts and release
@@ -49,7 +53,7 @@ explicitly, keeping snapshot creation deterministic and independent of a solver.
   General or edited trusses use `analyze`, which accepts finite single point loads.
   A successful ranking is deeply cloned and frozen at runtime.
 - `DeflectionChange` distinguishes a percentage reduction from absolute-only
-  change when the baseline is zero. Never sort on rounded display text.
+  change when baseline magnitude is ≤1e-12 mm. Never sort on rounded display text.
 
 ## Trial and retest invariants
 
@@ -69,7 +73,7 @@ for editable draft strings and derived `QuoteInputs`/`CostResult`; it never send
 financial changes through the experiment reducer. Phase 7 uses a separate app-mounted
 `useMeasurements` store for readings and per-case drafts; it sends no experiment events.
 
-| Event | Required reducer behavior in Phase 3 |
+| Event | Required reducer behavior |
 | --- | --- |
 | `round/start` | Preserve history; reset preview/retest; hide rankings; new round ID |
 | `prediction/select-panel` | Update an uncommitted legal choice only |
@@ -79,14 +83,19 @@ financial changes through the experiment reducer. Phase 7 uses a separate app-mo
 | `prediction/fail` | Clear the active result, retain choice/load for recovery and valid history |
 | `retest/show` | Verify source trial, retained brace, and matching result load; replace only the retest |
 | `retest/fail` | Replace active retest with an error; leave saved trials intact |
-| `trial/select` | Select an existing immutable trial and restore its displayed result |
+| `trial/select` | Set only `inspectedTrialId`; display the immutable saved result without changing the active round, selected trial, load, panel or retest |
+| `trial/return` | Clear inspection and display the exact preserved active draft/retest |
 
 The revealed round contains a trial ID, while the predicting round has no result
 field. This prevents a hidden state from accidentally carrying a result view.
 The synchronous app adapter calls the solver and dispatches retest events after
 post-commit load movement. The reducer, commit adapter and display selector are in
 `src/app/experiment/state.ts`; `useExperiment.ts` owns live solver calls. Selecting
-a stored trial uses its existing snapshot without solving again. The display
+a stored trial uses its existing snapshot without solving again. During inspection,
+experiment mutations and solver calls are blocked; keyboard focus moves to the
+return action and back to the opening history control. Reports, measurements and
+templates explicitly name the selected saved trial. Historical reports exclude the
+preserved active retest; it becomes eligible again only after returning. The display
 selector returns no active results for an error state. The separately labeled
 saved original can remain visible during a failed retest.
 
@@ -111,7 +120,8 @@ values: unknown data is allowed; a negative entered purchase cost is not.
 
 `QuoteInputs.packages` is an exact pair. Phase 4 validates unique package IDs,
 nonempty names and matching declared scope, finite nonnegative values/rate,
-positive safe-integer years, source references and contribution limits. It uses
+positive safe-integer years and source references. Cash contributions are applied
+once and capped at gross upfront cost by main’s engine; excess never offsets upkeep. It uses
 unrounded calculations and rounds currency only for display. The runtime parser
 and validation live in the cost module; see [Phase 4](phase-4.md) for formulas and
 numerical policy.
@@ -143,8 +153,12 @@ cannot support agreement. Even fine resolution and small spread leave agreement
 unassessed: paired physical tests, systematic error and uncertainty need review.
 The builder derives assessment again and cannot accept a caller's `resolved` flag
 as proof. The existing enum remains compatible; the new UI never emits `resolved`.
-Legacy internal records with no raw readings remain unassessed/inconclusive;
-the entry form always requires raw readings. No public JSON import is provided.
+The shared validator requires 1–20 finite raw observations, nonblank method and
+physical conditions, valid units/association/resolution/displacement and agreement
+between displacement and the raw mean. The entry form and direct report builder
+use the same rules. Zero observations and unknown resolution are valid; an absent
+measurement list is valid and displays “No measurement recorded.” Empty raw
+readings inside a supplied measurement are invalid. No public JSON import is provided.
 
 `ReportInputs` explicitly provides trial, optional retest, selected quote inputs
 and results, readings and assumptions. `ReportPayload` adds schema version, report

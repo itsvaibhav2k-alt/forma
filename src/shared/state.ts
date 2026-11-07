@@ -16,6 +16,8 @@ export interface ExperimentState {
   readonly round: PredictionRound;
   readonly trials: readonly Trial[];
   readonly selectedTrialId: string | null;
+  /** Read-only history selection; never replaces the active round or retest. */
+  readonly inspectedTrialId: string | null;
   readonly retest: ActiveRetest;
 }
 
@@ -33,7 +35,8 @@ export type ExperimentEvent =
   | { readonly type: 'prediction/fail'; readonly roundId: string; readonly error: AnalysisError }
   | { readonly type: 'retest/show'; readonly value: Retest }
   | { readonly type: 'retest/fail'; readonly load: Load; readonly error: AnalysisError }
-  | { readonly type: 'trial/select'; readonly trialId: string };
+  | { readonly type: 'trial/select'; readonly trialId: string }
+  | { readonly type: 'trial/return' };
 
 export type CommunityEvent =
   | { readonly type: 'quotes/replace'; readonly quotes: QuoteInputs }

@@ -3,7 +3,8 @@ import { createServer } from 'vite';
 
 // Separate from correctness tests: a shared runner's timing should not make CI flaky.
 // Uses production modules; never loads the independent regression fixtures.
-const server = await createServer({ server: { middlewareMode: true, ws: false, watch: null }, appType: 'custom' });
+// stdout is a JSON protocol consumed by package-release; keep Vite info logs out.
+const server = await createServer({ logLevel: 'error', server: { middlewareMode: true, ws: false, watch: null }, appType: 'custom' });
 try {
   const { createBridgePreset, rankBraces } = await server.ssrLoadModule('/src/structures/index.ts');
   const design = createBridgePreset();

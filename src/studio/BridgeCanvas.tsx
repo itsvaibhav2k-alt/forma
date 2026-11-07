@@ -23,11 +23,12 @@ export interface BridgeCanvasProps {
   showDeformation: boolean;
   showForces: boolean;
   locked: boolean;
+  readOnly?: boolean;
   onLoadChange: (id: LoadNodeId) => void;
   onPanelChange: (id: PanelId) => void;
 }
 
-export function BridgeCanvas({ baseline, loadNodeId, panelId, results, comparison, showDeformation, showForces, locked, onLoadChange, onPanelChange }: BridgeCanvasProps) {
+export function BridgeCanvas({ baseline, loadNodeId, panelId, results, comparison, showDeformation, showForces, locked, readOnly = false, onLoadChange, onPanelChange }: BridgeCanvasProps) {
   const titleId = useId();
   const descriptionId = useId();
   const svgRef = useRef<SVGSVGElement>(null);
@@ -39,6 +40,7 @@ export function BridgeCanvas({ baseline, loadNodeId, panelId, results, compariso
   const loadX = LOAD_X[LOAD_NODE_IDS.indexOf(loadNodeId)]!;
 
   function movePointer(event: PointerEvent<SVGGElement>) {
+    if (readOnly) return;
     const transform = svgRef.current?.getScreenCTM();
     if (!transform) return;
     const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(transform.inverse());
@@ -49,6 +51,7 @@ export function BridgeCanvas({ baseline, loadNodeId, panelId, results, compariso
     }
   }
   function moveKeyboard(event: KeyboardEvent<SVGGElement>) {
+    if (readOnly) return;
     const index = LOAD_NODE_IDS.indexOf(loadNodeId);
     const next = event.key === 'Home' ? 0 : event.key === 'End' ? 2 : ['ArrowLeft', 'ArrowDown'].includes(event.key) ? Math.max(0, index - 1) : ['ArrowRight', 'ArrowUp'].includes(event.key) ? Math.min(2, index + 1) : null;
     if (next !== null) { event.preventDefault(); onLoadChange(LOAD_NODE_IDS[next]!); }
@@ -88,17 +91,17 @@ export function BridgeCanvas({ baseline, loadNodeId, panelId, results, compariso
         <circle cx={screenX(node.xMm)} cy={screenY(node.yMm)} r="5" />
         <text x={screenX(node.xMm)} y={screenY(node.yMm) - 14} textAnchor="middle">{node.id}</text>
       </g>)}
-      <g role="slider" tabIndex={0} aria-label="Load position on bridge" aria-valuemin={1} aria-valuemax={3}
+      <g role="slider" tabIndex={readOnly ? -1 : 0} aria-disabled={readOnly} aria-label="Load position on bridge" aria-valuemin={1} aria-valuemax={3}
         aria-valuenow={LOAD_NODE_IDS.indexOf(loadNodeId) + 1} aria-valuetext={`${loadNodeId}, 10 N downward`} aria-orientation="horizontal"
         className="load-handle" onKeyDown={moveKeyboard}
-        onPointerDown={event => { if (event.button !== 0) return; event.preventDefault(); event.currentTarget.focus(); dragging.current = event.pointerId; lastSnap.current = loadNodeId; event.currentTarget.setPointerCapture(event.pointerId); movePointer(event); }}
+        onPointerDown={event => { if (readOnly || event.button !== 0) return; event.preventDefault(); event.currentTarget.focus(); dragging.current = event.pointerId; lastSnap.current = loadNodeId; event.currentTarget.setPointerCapture(event.pointerId); movePointer(event); }}
         onPointerMove={event => { if (dragging.current === event.pointerId) movePointer(event); }}
         onPointerUp={event => { if (dragging.current === event.pointerId) { movePointer(event); dragging.current = null; event.currentTarget.releasePointerCapture(event.pointerId); } }}
         onPointerCancel={() => { dragging.current = null; }} onLostPointerCapture={() => { dragging.current = null; }}>
         <rect x={loadX - 29} y="199" width="58" height="81" rx="9" className="load-hit-area" />
         <path d={`M${loadX} 205 V253 m-9 -11 9 11 9 -11`} />
         <text x={loadX + 22} y="242">10 N</text>
-        <text x={loadX} y="297" textAnchor="middle" className="drag-caption">↔ drag load</text>
+        <text x={loadX} y="297" textAnchor="middle" className="drag-caption">{readOnly ? 'Saved load' : '↔ drag load'}</text>
       </g>
     </svg>
   </div>;

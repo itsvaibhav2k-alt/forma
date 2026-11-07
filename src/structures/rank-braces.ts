@@ -1,23 +1,10 @@
-import { FIXED_LOAD_FY_N, LOAD_NODE_IDS, PANEL_IDS, PRESET_VERSION, type BraceCandidate, type DeflectionChange, type PanelId, type RankBraces } from '../shared';
+import { FIXED_LOAD_FY_N, LOAD_NODE_IDS, PANEL_IDS, PRESET_VERSION, type BraceCandidate, type PanelId, type RankBraces } from '../shared';
 import { snapshot } from '../shared/snapshot';
-import { analyze } from './analyze';
+import { rankBraces as mainRankBraces } from '../engines/main/rankBraces';
+import { APP_PANEL, ENGINE_PANEL, fromEngineAnalysis, fromEngineError, toEngineDesign } from './main-adapter';
 import { analysisError } from './errors';
 import { createBraceMember, createBridgePreset } from './preset';
 import { validateDesign, validateLoadCase } from './validation';
-
-/** Magnitudes are full-precision absolute vertical displacements in mm. */
-export function deflectionChange(baselineMm: number, candidateMm: number): DeflectionChange {
-  const reductionMm = baselineMm - candidateMm;
-  return baselineMm === 0
-    ? { kind: 'absolute-only', reductionMm }
-    : { kind: 'relative', reductionMm, reductionPercent: 100 * (reductionMm / baselineMm) };
-}
-
-export function bestPanelIds(displacementMm: Readonly<Record<PanelId, number>>): PanelId[] {
-  const best = Math.min(...PANEL_IDS.map(id => displacementMm[id]));
-  const tolerance = Math.max(1e-9, 1e-6 * best);
-  return PANEL_IDS.filter(id => Math.abs(displacementMm[id] - best) <= tolerance);
-}
 
 /** Fixed-preset judging API. General or edited trusses use analyze directly. */
 export const rankBraces: RankBraces = (baseline, load) => {
@@ -49,16 +36,18 @@ export const rankBraces: RankBraces = (baseline, load) => {
     return analysisError('INVALID_INPUT', 'Brace ranking requires the unmodified four-panel baseline preset.');
   }
 
-  const baselineAnalysis = analyze(baseline, load);
-  if (baselineAnalysis.status === 'error') return baselineAnalysis;
+  const engineDesign = { ...toEngineDesign(baseline), braceOptions: PANEL_IDS.map(panelId => ({ panelId: ENGINE_PANEL[panelId], label: panelId, member: createBraceMember(panelId) })) };
+  const result = mainRankBraces(engineDesign, load);
+  if (result.status === 'invalid') return fromEngineError(result);
   const candidates = {} as Record<PanelId, BraceCandidate>;
-  const deflections = {} as Record<PanelId, number>;
-  for (const panelId of PANEL_IDS) {
-    const design = { ...baseline, id: `${baseline.id}+${panelId}`, members: [...baseline.members, createBraceMember(panelId)] };
-    const analysis = analyze(design, load);
-    if (analysis.status === 'error') return analysis;
-    candidates[panelId] = { panelId, design, analysis, change: deflectionChange(baselineAnalysis.loadedJointDisplacementMm, analysis.loadedJointDisplacementMm) };
-    deflections[panelId] = analysis.loadedJointDisplacementMm;
+  for (const alternative of result.alternatives) {
+    const panelId = APP_PANEL[alternative.panelId];
+    const { reductionMm, reductionPercent } = alternative.deflection;
+    candidates[panelId] = {
+      panelId, design: { ...baseline, id: `${baseline.id}+${panelId}`, members: alternative.design.members },
+      analysis: fromEngineAnalysis(alternative.analysis, load),
+      change: reductionPercent === null ? { kind: 'absolute-only', reductionMm } : { kind: 'relative', reductionMm, reductionPercent },
+    };
   }
-  return snapshot({ status: 'ok', load, baseline: { design: baseline, analysis: baselineAnalysis }, candidates, bestIds: bestPanelIds(deflections) });
+  return snapshot({ status: 'ok', load, baseline: { design: baseline, analysis: fromEngineAnalysis(result.baseline, load) }, candidates, bestIds: result.bestPanelIds.map(id => APP_PANEL[id]) });
 };

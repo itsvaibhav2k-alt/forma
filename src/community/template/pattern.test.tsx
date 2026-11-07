@@ -64,6 +64,7 @@ describe('actual-size assembly pattern', () => {
     const print = vi.spyOn(window, 'print').mockImplementation(() => {});
     render(<AssemblyTemplate pattern={buildAssemblyPattern(trial, true)} />);
     expect(screen.getByRole('alert')).toHaveTextContent('Do not shrink to fit');
+    expect(screen.getByRole('article').closest('.template-preview')).toHaveAttribute('data-print-fits', 'false');
     expect(screen.getByRole('button', { name: 'Print assembly template' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Download 1:1 SVG' })).toBeEnabled();
     expect(screen.getByRole('img')).toHaveAttribute('width', '254mm');

@@ -27,6 +27,10 @@ preset and brace generator. View files live in `src/studio`.
 
 ## 3.2 — Commit, history and state ownership
 
+RC hardening separates read-only inspection from the active round/retest.
+“Back to current experiment” restores the preserved draft or retest without a
+solver call. See [current state transitions](contracts.md) and [verification](rc-hardening.md).
+
 Prerequisite: 3.1. Integration owns `src/app/experiment/state.ts`. Studio receives
 data and callbacks and owns only display preferences.
 
@@ -41,7 +45,7 @@ are ignored. The commit button remains disabled after success; the separate
 new-round button cannot accidentally receive the second click of a double-click.
 
 A new round keeps history but clears the selection, retest and active results.
-Selecting a saved trial restores its exact stored load, brace and numerical data
+Selecting a saved trial now inspects its exact stored load, brace and numerical data
 without solving again. Navigation to the cost placeholder and back preserves the
 experiment because its reducer lives in the app. Reload starts a fresh session.
 

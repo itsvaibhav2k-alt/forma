@@ -1,5 +1,5 @@
 import { PANEL_IDS, type PanelId, type RankedBraces } from '../shared';
-import { formatChange, formatForce, formatMm, panelRank } from './format';
+import { formatChange, formatForce, formatMm, panelRank, verdictLead } from './format';
 
 export function Results({ results, panelId, isRetest }: { results: RankedBraces; panelId: PanelId; isRetest: boolean }) {
   const chosen = results.candidates[panelId];
@@ -7,6 +7,7 @@ export function Results({ results, panelId, isRetest }: { results: RankedBraces;
   const winners = results.bestIds.join(' + ');
   return <section className="results-card workspace-card" aria-labelledby="results-heading">
     <div className="card-heading"><h2 id="results-heading">{isRetest ? 'Same-brace retest' : 'Your prediction, tested'}</h2><span className="tag">Load {results.load.nodeId} · Brace {panelId}</span></div>
+    <div className="verdict"><p className="verdict-lead">{verdictLead(results, panelId, results.load.nodeId)}</p>{!results.bestIds.includes(panelId) && <p className="verdict-note">Best here: {results.bestIds.join(' and ')} at {formatChange(results.candidates[results.bestIds[0]!].change)}.</p>}<p className="verdict-note">Linear-elastic simulation, not a safety rating.</p></div>
     <div className="result-metrics">
       <div><span>Original displacement</span><strong>{formatMm(results.baseline.analysis.loadedJointDisplacementMm)} <small>mm</small></strong></div>
       <div><span>With your {panelId} brace</span><strong>{formatMm(chosen.analysis.loadedJointDisplacementMm)} <small>mm</small></strong></div>

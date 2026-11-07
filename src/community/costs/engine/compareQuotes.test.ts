@@ -117,7 +117,9 @@ describe('unknowns, contributions and source data', () => {
     const result = success(change(1, { materials: known(0), cashContribution: known(1000), donationNote: 'Materials donated; actual purchase cost is zero.' }));
     expect(value(result.packages[1].upfront)).toBe(6000);
     expect(value(success(change(1, { cashContribution: known(21000) })).packages[1].upfront)).toBe(0);
-    expect(compareQuotes(change(1, { cashContribution: known(21000.01) })).status).toBe('error');
+    const excess = success(change(1, { cashContribution: known(30000) }));
+    expect(value(excess.packages[1].upfront)).toBe(0);
+    expect(value(excess.packages[1].presentCost)).toBeCloseTo(450 * excess.annuityFactor, 10);
   });
 
   it('does not reject equivalent decimal credits because of binary rounding', () => {

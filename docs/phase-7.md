@@ -76,10 +76,12 @@ sheet exceeds its allowance; it never shrinks the geometry to make it fit.
 - `npm run release:prepare` reruns checks, benchmarks and local-asset audit before
   creating a fresh candidate. The bundle includes `PHYSICAL-CHECKLIST.md`.
 
-The native PDF check remains with the user. No physical printer/ruler calibration,
+See [RC hardening](rc-hardening.md) for later host checks: 212 application tests,
+actual launcher/CSP flow, and visually inspected Letter/Letter-landscape PDFs.
+The native print-dialog check remains with the user. No physical printer/ruler calibration,
 actual measurement campaign, target-laptop offline test, outside-tester acceptance
-or timed rehearsal has been certified. Actual launcher socket testing was previously
-declined and was not retried. These limitations remain in the release checklist.
+or timed rehearsal has been certified. Actual launcher socket testing now passes on this development host; repeating
+it on the presentation laptop remains in the release checklist.
 Use the [physical checklist](physical-checklist.md) if demonstrating optional work;
 omit that demonstration if it is not validated. The core release still needs its
 Phase 6 acceptance and a new clean committed candidate before final freeze.

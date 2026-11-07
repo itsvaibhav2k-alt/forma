@@ -34,7 +34,9 @@ export function App({ ranker = rankBraces }: { ranker?: RankBraces } = {}) {
   const [includeRetest, setIncludeRetest] = useState(false);
   const [reportError, setReportError] = useState('');
   const canCapture = !!display.trial && quotes.result.status === 'ok';
-  const activeRetest = experiment.state.retest.status === 'ready' ? experiment.state.retest.value : null;
+  const inspecting = experiment.state.inspectedTrialId !== null;
+  const trialLabel = display.trial ? `Trial ${String(experiment.state.trials.findIndex(trial => trial.id === display.trial!.id) + 1).padStart(2, '0')} · ${display.trial.chosenPanelId} at ${display.trial.load.nodeId}` : '';
+  const activeRetest = !inspecting && experiment.state.retest.status === 'ready' && experiment.state.retest.value.sourceTrialId === display.trial?.id ? experiment.state.retest.value : null;
   const cases = display.trial ? measurementCases(display.trial, activeRetest) : [];
   const reportCases = display.trial ? measurementCases(display.trial, includeRetest ? activeRetest : null) : [];
   const includedReadings = readingsForCases(measurements.readings, reportCases);
@@ -47,7 +49,7 @@ export function App({ ranker = rankBraces }: { ranker?: RankBraces } = {}) {
     if (!display.trial || !canCapture) return;
     try {
       const captured = buildDecisionSheet({ trial: display.trial,
-        retest: includeRetest && experiment.state.retest.status === 'ready' ? experiment.state.retest.value : null,
+        retest: includeRetest ? activeRetest : null,
         quotes: quotes.inputs, costs: quotes.result, readings: includedReadings, assumptions: [],
       }, crypto.randomUUID(), new Date().toISOString());
       setReport(captured); setReportError(''); setView('report');
@@ -80,7 +82,8 @@ export function App({ ranker = rankBraces }: { ranker?: RankBraces } = {}) {
         </div>
 
         {view === 'experiment' ? <Experiment baseline={experiment.baseline} {...display}
-          trials={experiment.state.trials} isRetest={experiment.state.retest.status !== 'idle'}
+          trials={experiment.state.trials} isRetest={!inspecting && experiment.state.retest.status !== 'idle'}
+          inspectedTrialId={experiment.state.inspectedTrialId} onReturn={() => experiment.dispatch({ type: 'trial/return' })}
           onLoadChange={experiment.moveLoad} onPanelChange={panelId => experiment.dispatch({ type: 'prediction/select-panel', panelId })}
           onCommit={experiment.commit} onStart={experiment.startRound}
           onSelectTrial={trialId => experiment.dispatch({ type: 'trial/select', trialId })} />
@@ -89,7 +92,7 @@ export function App({ ranker = rankBraces }: { ranker?: RankBraces } = {}) {
           : view === 'template' ? pattern && <AssemblyTemplate pattern={pattern} />
           : report && <ReportPreview report={report} />}
 
-        {(view === 'experiment' || view === 'measurements') && display.trial && <section className="optional-tools" aria-labelledby="optional-heading"><h2 id="optional-heading">Optional physical evidence and pattern</h2><p>Record actual observations or capture a separate, undeformed side-panel pattern from this saved trial. Printer scale and physical model agreement still need verification.</p><div className="optional-tools-buttons">{view !== 'measurements' && <button className="outline-button" type="button" onClick={() => setView('measurements')}>Record measurements</button>}<button className="outline-button" type="button" onClick={() => capturePattern(false)}>Original assembly template</button><button className="outline-button" type="button" onClick={() => capturePattern(true)}>Braced assembly template</button></div></section>}
+        {(view === 'experiment' || view === 'measurements') && display.trial && <section className="optional-tools" aria-labelledby="optional-heading"><h2 id="optional-heading">Optional physical evidence and pattern</h2><p>Selected saved result: {trialLabel}. Record actual observations or capture a separate, undeformed side-panel pattern from this trial. Printer scale and physical model agreement still need verification.</p><div className="optional-tools-buttons">{view !== 'measurements' && <button className="outline-button" type="button" onClick={() => setView('measurements')}>Record measurements</button>}<button className="outline-button" type="button" onClick={() => capturePattern(false)}>Original assembly template</button><button className="outline-button" type="button" onClick={() => capturePattern(true)}>Braced assembly template</button></div></section>}
 
         {view !== 'report' && view !== 'template' && <section className="report-strip" aria-labelledby="report-heading">
           <div>
@@ -98,10 +101,10 @@ export function App({ ranker = rankBraces }: { ranker?: RankBraces } = {}) {
             <p>Capture your selected saved prediction with the current cost inputs. Blank prices stay unknown.</p>
           </div>
           <div className="report-capture-controls">
-            {display.trial && <p>Selected: load {display.trial.load.nodeId} · brace {display.trial.chosenPanelId}.</p>}
+            {display.trial && <p>Selected saved result: {trialLabel}. Costs use the current independent financial inputs.</p>}
             {measurements.readings.length > 0 && <p>{includedReadings.length} matching observation(s) included; {measurements.readings.length - includedReadings.length} from other cases excluded. Saved sheets remain unchanged.</p>}
-            {experiment.state.retest.status === 'ready' && <label><input type="checkbox" checked={includeRetest} onChange={event => setIncludeRetest(event.target.checked)} />Include the current {experiment.state.retest.value.load.nodeId} retest as a separate scenario</label>}
-            {experiment.state.retest.status === 'error' && <p>The failed retest will not be included. The saved prediction remains available.</p>}
+            {activeRetest && <label><input type="checkbox" checked={includeRetest} onChange={event => setIncludeRetest(event.target.checked)} />Include the current {activeRetest.load.nodeId} retest as a separate scenario</label>}
+            {!inspecting && experiment.state.retest.status === 'error' && <p>The failed retest will not be included. The saved prediction remains available.</p>}
             {!display.trial ? <p>Commit a prediction or select a saved trial first.</p> : quotes.result.status === 'error' && <p>Set a common scope and correct errors in Compare build options first. Amounts may remain blank.</p>}
             <button className="outline-button" disabled={!canCapture} type="button" onClick={captureReport}>{report ? 'Capture new sheet' : 'Decision sheet'}</button>
             {reportError && <p role="alert">{reportError}</p>}

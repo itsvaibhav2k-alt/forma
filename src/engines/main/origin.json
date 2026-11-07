@@ -1,0 +1,20 @@
+{
+  "commit": "9a9c2d816d38abfbcab10461e6571d8f591d89e7",
+  "files": [
+    {
+      "sourcePath": "src/structures/analyze.ts",
+      "localPath": "src/engines/main/analyze.ts",
+      "sha256": "9d30f1042efd188c78315e9c0f0d21a59d32f6cec26a7ec07574b7603b712d89"
+    },
+    {
+      "sourcePath": "src/structures/rankBraces.ts",
+      "localPath": "src/engines/main/rankBraces.ts",
+      "sha256": "1fcb7a8e92c7962fe153e6371b94664a2b5be2fbc55045f9dd502a2c44377b2e"
+    },
+    {
+      "sourcePath": "src/community/finance/index.ts",
+      "localPath": "src/engines/main/finance.ts",
+      "sha256": "7a46ddbe5d07300363aae6d7a36e2b43cc8f3c9700bfdd4f45fe94b352aae597"
+    }
+  ]
+}

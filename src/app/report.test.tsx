@@ -97,6 +97,7 @@ it('blocks one-page printing when measured content overflows without truncating 
   await user.click(screen.getByRole('button', { name: 'Decision sheet' }));
   expect(screen.getByRole('button', { name: 'Print / Save PDF' })).toBeDisabled();
   expect(screen.getByRole('alert')).toHaveTextContent('exceeds one Letter page');
+  expect(screen.getByRole('article').closest('.report-preview')).toHaveAttribute('data-print-fits', 'false');
   expect(screen.getByRole('article')).toHaveTextContent('Open assumptions');
   expect(screen.getByRole('button', { name: 'Download snapshot JSON' })).toBeEnabled();
   expect(print).not.toHaveBeenCalled();

@@ -89,6 +89,27 @@ describe('immutable report builder', () => {
     expect(() => buildDecisionSheet({ ...data, retest: null, readings: [{ ...valid, appliedLoad: data.retest!.load }] }, 'report-1', time)).toThrow('measurement must match');
   });
 
+  it.each([
+    ['empty readings', { rawReadings: [], displacement: 0 }, /raw reading/],
+    ['blank conditions', { notes: '  \n ' }, /conditions/],
+    ['blank method', { method: '  ' }, /method/],
+    ['inconsistent mean', { displacement: 0.1 }, /mean/],
+    ['too many readings', { rawReadings: Array(21).fill(0.04) }, /20/],
+    ['invalid units', { units: 'm' }, /mm, cm or in/],
+  ])('direct capture rejects %s', (_label, patch, message) => {
+    const data = inputs();
+    const invalid = { ...reading(data), ...patch } as Reading;
+    expect(() => buildDecisionSheet({ ...data, readings: [invalid] }, 'report-1', time)).toThrow(message);
+  });
+
+  it('accepts genuine zero observations and unknown resolution, reassessing a resolved claim', () => {
+    const data = inputs();
+    const zero: Reading = { ...reading(data), rawReadings: [0, 0, 0], displacement: 0, instrumentResolution: null, assessment: 'resolved' };
+    const report = buildDecisionSheet({ ...data, readings: [zero] }, 'report-1', time);
+    expect(report.readings[0]).toMatchObject({ rawReadings: [0, 0, 0], displacement: 0, instrumentResolution: null, assessment: 'unassessed' });
+    expect(buildDecisionSheet(data, 'absent', time).readings).toEqual([]);
+  });
+
   it('requires explicit identity/time and deduplicates mandatory assumptions', () => {
     const data = inputs();
     expect(() => buildDecisionSheet(data, '', time)).toThrow('ID');

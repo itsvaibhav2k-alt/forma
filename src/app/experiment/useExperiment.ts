@@ -7,13 +7,14 @@ export function useExperiment(ranker: RankBraces) {
   const [baseline] = useState(createBridgePreset);
   const [state, dispatch] = useReducer(experimentReducer, undefined, () => createExperimentState(crypto.randomUUID()));
   function commit() {
-    if (state.round.phase === 'revealed' || !state.round.panelId) return;
+    if (state.inspectedTrialId || state.round.phase === 'revealed' || !state.round.panelId) return;
     const results = ranker(baseline, state.round.load);
     dispatch(results.status === 'error'
       ? { type: 'prediction/fail', roundId: state.round.roundId, error: results }
       : { type: 'prediction/commit', roundId: state.round.roundId, trialId: crypto.randomUUID(), results });
   }
   function moveLoad(nodeId: LoadNodeId) {
+    if (state.inspectedTrialId) return;
     const load = { ...DEFAULT_LOAD, nodeId };
     if (state.round.phase !== 'revealed') {
       dispatch({ type: 'prediction/move-load', load });

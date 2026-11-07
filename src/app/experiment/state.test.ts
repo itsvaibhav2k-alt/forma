@@ -51,7 +51,9 @@ describe('prediction and history reducer', () => {
     expect(trial.results.candidates.P2.change).toMatchObject({ kind: 'relative', reductionPercent: expect.closeTo(1.09, 2) });
     expect(state.retest.status === 'ready' && Object.isFrozen(state.retest.value.results)).toBe(true);
     const restored = reduce(state, { type: 'trial/select', trialId: trial.id });
-    expect(restored.retest.status).toBe('idle');
+    expect(restored.retest).toBe(state.retest);
+    expect(restored.round).toBe(state.round);
+    expect(reduce(restored, { type: 'trial/return' })).toEqual(state);
     expect(experimentDisplay(restored).results).toBe(trial.results);
     expect(experimentDisplay(restored).load).toBe(trial.load);
   });
@@ -68,6 +70,26 @@ describe('prediction and history reducer', () => {
     state = reduce(state, { type: 'trial/select', trialId: 'trial-1' });
     expect(experimentDisplay(state).trial?.chosenPanelId).toBe('P2');
     expect(experimentDisplay(state).results).toBe(previous.trials[0]!.results);
+  });
+
+  it('inspects multiple trials without touching an unfinished draft, and blocks mutations', () => {
+    const first = commit();
+    let second = reduce(first, { type: 'round/start', roundId: 'round-2', load: DEFAULT_LOAD });
+    second = reduce(second, { type: 'prediction/select-panel', panelId: 'P3' });
+    second = commit(second, 'trial-2');
+    let draft = reduce(second, { type: 'round/start', roundId: 'round-3', load: loadB2 });
+    draft = reduce(draft, { type: 'prediction/select-panel', panelId: 'P4' });
+    let inspected = reduce(draft, { type: 'trial/select', trialId: 'trial-1' });
+    expect(inspected.round).toBe(draft.round);
+    expect(inspected.trials).toBe(draft.trials);
+    expect(experimentDisplay(inspected).trial?.id).toBe('trial-1');
+    expect(reduce(inspected, { type: 'prediction/select-panel', panelId: 'P1' })).toBe(inspected);
+    expect(reduce(inspected, { type: 'round/start', roundId: 'round-4', load: DEFAULT_LOAD })).toBe(inspected);
+    inspected = reduce(inspected, { type: 'trial/select', trialId: 'trial-2' });
+    expect(experimentDisplay(inspected).trial?.id).toBe('trial-2');
+    const returned = reduce(inspected, { type: 'trial/return' });
+    expect(returned).toEqual(draft);
+    expect(experimentDisplay(returned)).toMatchObject({ panelId: 'P4', load: loadB2, results: null });
   });
 
   it('ignores stale events, reused IDs and mismatched load, preset or solver results', () => {

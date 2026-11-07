@@ -1,6 +1,7 @@
 # Phase 4 — Independent package comparison
 
-Implemented on the `phases` branch after Phases 1–3. The structural engine, preset
+Implemented on the `phases` branch after Phases 1–3; calculations now delegate to
+main’s pinned engine via the [combined integration](main-engine-integration.md). The structural engine, preset
 and experiment reducer are unchanged. No dependencies or fixture corrections were
 needed. See [merge order](merge-plan.md#phase-4-handoff) for review boundaries.
 
@@ -13,7 +14,9 @@ validation, savings assessment and snapshot helper without importing React.
 For each equal-scope package:
 
 ```text
-upfront = materials + freight + installation − cash contribution
+gross upfront = materials + freight + installation
+applied contribution = min(cash contribution, gross upfront)
+upfront = gross upfront − applied contribution
 funding gap = max(0, upfront − budget)
 factor = sum over t=1…years of (1 + realRate)^−t
 discounted total = upfront + annual upkeep × factor
@@ -29,16 +32,16 @@ full precision; display rounding never decides whether savings meet the threshol
 
 Validation rejects malformed packages, duplicate/empty IDs, blank names/scope,
 different declared scopes, missing source references, nonfinite or negative costs,
-budget/rate, nonpositive or unsafe/fractional years, excess cash contributions and
+budget/rate, nonpositive or unsafe/fractional years and
 nonfinite calculated results. The shared scope is a declaration, not a semantic
-check that suppliers actually offer equivalent service. Contributions are bounded
-once the three initial costs are known. Material donations use actual purchase
+check that suppliers actually offer equivalent service. Contributions are capped
+at gross upfront cost; excess does not offset upkeep. Material donations use actual purchase
 cost, including an explicit zero, plus notes; they are not deducted twice.
 
-Comparisons allow only binary roundoff tolerance:
-`8 × Number.EPSILON × max(1, |compared values|)`. This is used for cash-contribution
-limits, equal upfront costs and threshold equality, not a cent-sized tolerance.
-An accepted tiny subtraction residual is clamped to zero. Very large finite inputs
+Main uses exact unrounded equality for equal upfront costs. The presentation-only
+savings assessment keeps `8 × Number.EPSILON × max(1, |compared values|)` for
+threshold equality, not a cent-sized tolerance. Applied contributions cannot
+produce a negative upfront cost. Very large finite inputs
 can still overflow the calculation; those return an error without numeric results.
 
 Unknown is distinct from invalid or zero. Every unavailable result identifies its

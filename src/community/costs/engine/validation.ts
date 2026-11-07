@@ -47,9 +47,7 @@ export function validateQuoteInputs(input: unknown): CostValidationError | null 
     if (['materials', 'freight', 'installation'].every(field => known.has(field))) {
       const initial = known.get('materials')! + known.get('freight')! + known.get('installation')!;
       if (!Number.isFinite(initial)) issue('materials', 'Combined initial costs exceed the supported numerical range.');
-      else if (known.has('cashContribution') && known.get('cashContribution')! - initial > arithmeticTolerance(initial, known.get('cashContribution')!)) {
-        issue('cashContribution', 'Cash contributions cannot exceed materials, freight and installation combined.');
-      }
+
     }
   }
   if (scopes.length === 2 && scopes[0] !== scopes[1]) issues.push({ field: 'scope', message: 'Use one common scope and level-of-service description for both packages.' });

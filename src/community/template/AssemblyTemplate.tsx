@@ -10,7 +10,12 @@ export function AssemblyTemplate({ pattern }: { pattern: AssemblyPattern }) {
     const page = sheet.current;
     if (!page) return;
     // Letter landscape minus 10 mm margins, with a little height allowance.
-    const measure = () => setFits(page.scrollHeight <= 194 * 96 / 25.4 && page.scrollWidth <= 254 * 96 / 25.4 + 1);
+    const measure = () => {
+      // Native print hides overfull paper. Do not reinterpret that zero-sized
+      // hidden layout as fitting and accidentally unblock the print guard.
+      if (typeof window.matchMedia === 'function' && window.matchMedia('print').matches) return;
+      setFits(page.scrollHeight <= 194 * 96 / 25.4 && page.scrollWidth <= 254 * 96 / 25.4 + 1);
+    };
     measure();
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure);
     observer?.observe(page);
@@ -26,7 +31,7 @@ export function AssemblyTemplate({ pattern }: { pattern: AssemblyPattern }) {
     const link = document.createElement('a'); link.href = url; link.download = `forma-assembly-${pattern.addedMemberId ?? 'original'}.svg`; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
-  return <div className="template-preview"><div className="template-actions"><div><h2>One side-panel pattern</h2><p>Print separately on US Letter landscape at 100% / actual size. Disable fit-to-page and browser headers/footers. Measure the 100 mm check bar on the actual print before using the pattern.</p><p>This captured geometry stays fixed when you change trials. A printer calibration check is still required; this screen cannot verify physical scale.</p></div><div><button className="primary-button" type="button" disabled={!fits} onClick={() => window.print()}>Print assembly template</button><button className="outline-button" type="button" onClick={download}>Download 1:1 SVG</button></div></div>
+  return <div className="template-preview" data-print-fits={fits}><div className="template-actions"><div><h2>One side-panel pattern</h2><p>Print separately on US Letter landscape at 100% / actual size. Disable fit-to-page and browser headers/footers. Measure the 100 mm check bar on the actual print before using the pattern.</p><p>This captured geometry stays fixed when you change trials. A printer calibration check is still required; this screen cannot verify physical scale.</p></div><div><button className="primary-button" type="button" disabled={!fits} onClick={() => window.print()}>Print assembly template</button><button className="outline-button" type="button" onClick={download}>Download 1:1 SVG</button></div></div>
     {!fits && <p className="report-overflow" role="alert">This layout exceeds the landscape Letter allowance. Use the SVG in an application that preserves millimeter dimensions, print at 100%, and verify its check bar. Do not shrink to fit.</p>}
     <div className="template-paper-scroll"><article ref={sheet} className="assembly-sheet" aria-label="Captured assembly template">
       <header><p>FORMA / OPTIONAL ASSEMBLY PATTERN</p><h1>{pattern.label} · one modeled side</h1><p>Design {pattern.design.id} · {pattern.design.presetVersion} · span {pattern.spanMm} mm · height {pattern.heightMm} mm</p></header>

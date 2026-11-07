@@ -26,7 +26,7 @@ export const commitPrediction: CommitPrediction = input => {
 };
 
 export function createExperimentState(roundId: string): ExperimentState {
-  return { round: { phase: 'predicting', roundId, load: DEFAULT_LOAD, panelId: null }, trials: [], selectedTrialId: null, retest: { status: 'idle' } };
+  return { round: { phase: 'predicting', roundId, load: DEFAULT_LOAD, panelId: null }, trials: [], selectedTrialId: null, inspectedTrialId: null, retest: { status: 'idle' } };
 }
 
 export function selectedTrial(state: ExperimentState): Trial | undefined {
@@ -34,6 +34,7 @@ export function selectedTrial(state: ExperimentState): Trial | undefined {
 }
 
 export function experimentReducer(state: ExperimentState, event: ExperimentEvent): ExperimentState {
+  if (state.inspectedTrialId && event.type !== 'trial/select' && event.type !== 'trial/return') return state;
   const { round } = state;
   switch (event.type) {
     case 'round/start':
@@ -49,7 +50,7 @@ export function experimentReducer(state: ExperimentState, event: ExperimentEvent
       if (round.phase === 'revealed' || event.roundId !== round.roundId || !round.panelId || !event.trialId.trim() ||
           state.trials.some(trial => trial.id === event.trialId || trial.roundId === round.roundId) || !matches(event.results, round.load, PRESET_VERSION)) return state;
       const trial = commitPrediction({ trialId: event.trialId, roundId: round.roundId, presetVersion: PRESET_VERSION, load: round.load, chosenPanelId: round.panelId, results: event.results });
-      return { round: { phase: 'revealed', roundId: round.roundId, trialId: trial.id }, trials: [...state.trials, trial], selectedTrialId: trial.id, retest: { status: 'idle' } };
+      return { round: { phase: 'revealed', roundId: round.roundId, trialId: trial.id }, trials: [...state.trials, trial], selectedTrialId: trial.id, inspectedTrialId: null, retest: { status: 'idle' } };
     }
     case 'prediction/fail':
       if (round.phase === 'revealed' || event.roundId !== round.roundId) return state;
@@ -67,13 +68,20 @@ export function experimentReducer(state: ExperimentState, event: ExperimentEvent
     case 'trial/select': {
       const trial = state.trials.find(item => item.id === event.trialId);
       if (!trial) return state;
-      return { ...state, round: { phase: 'revealed', roundId: trial.roundId, trialId: trial.id }, selectedTrialId: trial.id, retest: { status: 'idle' } };
+      return { ...state, inspectedTrialId: trial.id };
     }
+    case 'trial/return':
+      return { ...state, inspectedTrialId: null };
   }
 }
 
 /** A failed active scenario exposes no previous analysis, even with saved history. */
 export function experimentDisplay(state: ExperimentState) {
+  if (state.inspectedTrialId) {
+    const trial = state.trials.find(item => item.id === state.inspectedTrialId);
+    if (!trial) throw new Error('History inspection must reference a stored trial.');
+    return { load: trial.load, panelId: trial.chosenPanelId, results: trial.results, error: null, trial };
+  }
   const trial = selectedTrial(state);
   if (state.round.phase !== 'revealed') return {
     load: state.round.load, panelId: state.round.panelId, results: null,

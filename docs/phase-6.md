@@ -2,7 +2,8 @@
 
 Status: **candidate tooling and development checks complete; final release gates
 pending**. The user confirmed that presentation will use a different laptop and
-assigned native PDF inspection to themselves. No release tag, submission or merge
+retains native print-dialog acceptance as a manual gate. Host-generated PDFs and
+launcher checks are now recorded in [RC hardening](rc-hardening.md). No release tag, submission or merge
 has been performed, and no timed rehearsal is claimed.
 
 ## 6.1 — Integrated checks
@@ -14,17 +15,17 @@ PDF gate from 5.3 is still pending; preparing 6.1 tooling does not waive it.
 
 `npm run check` now combines:
 
-- 178 application tests across 17 files.
+- 212 application tests across 21 files in the RC hardening checkout.
 - Six sandbox-safe Node tests for local asset references, missing/remote assets,
   checksums, symlinks, in-memory HTTP responses/MIME/CSP and invalid startup inputs.
 - Strict TypeScript checks and the production build.
 
 The separate `npm run test:release:network` checks actual loopback HTTP and
-occupied-port behavior. A first attempt to run socket tests failed with sandbox
-`EPERM`; escalation was declined. That test is **not passed or silently skipped**
-by the ordinary check command. It remains an explicit target-machine check.
+occupied-port behavior. The original sandbox attempt was blocked; RC hardening now passes the actual
+loopback/occupied-port test on this host. It remains separate from ordinary
+`check` and must still be exercised on the presentation laptop.
 
-Development-host benchmark (Node v20.20.2, macOS arm64; 300 warmups, 3,000 samples):
+Historical Phase 6 benchmark (Node v20.20.2, macOS arm64; 300 warmups, 3,000 samples):
 median **0.421 ms**, p95 **0.688 ms**, p99 **0.784 ms** for baseline plus four
 independent candidate solves, validation and immutable ranking. This meets the
 proposed 8 ms solver target **on this development host only**. Each packaging run
@@ -71,8 +72,8 @@ available. Internet access is still needed beforehand to obtain that runtime.
 The asset audit resolves HTML/CSS references against local files and rejects
 remote/missing references. The CSP restricts scripts, fonts and connections to
 the local origin. JavaScript is not formally proven network-free by this static
-audit. The existing app preview is served by Vite; the new launcher's actual
-startup and browser flow under its CSP still need target-machine verification.
+audit. RC hardening independently exercised the packaged launcher and app flow under
+this CSP on the development host. Target-machine verification remains required.
 
 `npm run release:verify -- /path/to/extracted/folder` checks file presence, sizes
 and hashes, then re-audits assets. Without a path it uses `latest.json`. In the
@@ -103,11 +104,11 @@ of this implementation.
 ### Remaining manual gates
 
 1. Outside-tester usability check and actual-laptop solver/render timing.
-2. Actual portable-server startup, port-conflict behavior and app flow under CSP.
+2. Repeat portable-server startup, port-conflict behavior and CSP flow on the presentation laptop.
 3. Internet-disconnected cold start, keyboard flow, one-page PDF and sample inspection.
 4. Final clean commit/candidate identity and two successful 90-second rehearsals.
 5. Team details, complete reused-code disclosure and event submission requirements.
 
 No feature expansion is needed to run these checks. Resolve any correctness or
-demo-blocking issue, then rebuild and repeat affected checks. Physical measurements
-and assembly templates remain optional later work.
+demo-blocking issue, then rebuild and repeat affected checks. Physical measurement entry and assembly templates are implemented in Phase 7.
+Actual physical observations and printer calibration remain optional manual gates.

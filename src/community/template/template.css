@@ -22,4 +22,6 @@
   .template-paper-scroll { overflow:visible; padding:0; }
   .assembly-sheet { page:assembly; width:254mm; margin:0; box-shadow:none; break-inside:avoid; }
   .assembly-sheet svg { width:254mm!important; height:100mm!important; }
+  .template-preview[data-print-fits="false"] .template-paper-scroll { display:none!important; }
+  .template-preview[data-print-fits="false"] .report-overflow { display:block!important; }
 }

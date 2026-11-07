@@ -21,6 +21,9 @@ Prerequisite: Phase 1.3 contracts, fixtures and tooling.
   after design validation. The general analyzer accepts horizontal, upward and
   zero single-point loads, including loads at restrained nodes.
 
+> Current engine ownership: [main-engine integration](main-engine-integration.md).
+> Original Phase 2 test/benchmark counts below are historical.
+
 ## 2.2 — Direct stiffness solver
 
 Prerequisite: 2.1. Entry point: `analyze(design, load)`.
@@ -30,22 +33,22 @@ stiffness matrix. The solver removes the restrained degrees of freedom, solves
 for the free displacements, and restores exact zero support displacements.
 
 The reduced matrix is symmetrically equilibrated using the square root of its
-diagonal. Partial-pivot Gaussian elimination solves the normalized system without
-forming an inverse. A pivot at or below **1e-12 times the largest original
-normalized entry** returns `UNSTABLE`. A zero free diagonal also returns
+diagonal. Main’s equilibrated Cholesky solver now solves the normalized system
+without forming an inverse. A Cholesky diagonal remainder at or below **1e-12**
+returns `UNSTABLE`. A zero free diagonal also returns
 `UNSTABLE`. This conservative near-mechanism policy is not a condition-number
 estimate. Nonfinite arithmetic or a stiffness outside representable positive
 range returns `NUMERICAL_FAILURE`.
 
 Before success, each free row must satisfy
-`abs(Ku-F) <= 1e-9 * max(max(abs(F)), sum(abs(Kij*uj)))` against the original
+`abs(Ku-F) <= 1e-9 * max(abs(Fi) + sum(abs(Kij*uj)), Number.MIN_VALUE)` against the original
 unscaled stiffness. All displacement, force and reaction outputs must be finite.
 This residual check measures equilibrium; it is not a guarantee of small forward
 error for arbitrary ill-conditioned input.
 
 Success includes all node displacement vectors, every support's reaction vector,
 all member axial forces (positive tension), the absolute vertical loaded-joint
-displacement, and solver version `forma-truss-2d-v1`. Reactions use `Ku-F` at
+displacement, and solver version `astra-truss-main-9a9c2d8`. Reactions use `Ku-F` at
 restrained components; unrestrained support components are zero. A fully
 restrained design is valid and returns zero displacement with load-balancing
 reactions. Errors contain only status, code, message and affected IDs where known.
@@ -73,9 +76,9 @@ a partial ranking. The result includes a deep frozen snapshot of all five design
 and analyses and the selected load, independent of later caller mutation.
 
 Rank on unrounded absolute vertical displacement. Include every candidate within
-`max(1e-9 mm, 1e-6 * best displacement)` of the best value, in panel order.
+`max(1e-9 mm, 1e-8 * best displacement)` of the best value, in panel order.
 Reduction is baseline minus candidate. Percentage reduction uses the nonzero
-baseline; the comparison helper returns absolute-only change for zero baseline.
+baseline; main returns absolute-only change for a baseline ≤1e-12 mm.
 Negative improvements remain negative. Rounded strings never enter the ranking.
 
 Expected winners: **B1 → P1; B2 → P2 and P3; B3 → P4**.
@@ -140,7 +143,8 @@ calculation bottleneck requiring a Rust/Wasm port at this stage.
 
 The element transformation and stiffness assembly follow the conventional
 [2D truss direct stiffness formulation](https://mechanics.ju.se/SolidMechanics/SystematicTrussAnalysis.html).
-Equilibration and partial pivoting are standard linear-system techniques; see
+The original Phase 2 implementation used equilibration and partial pivoting;
+the combined candidate uses main’s equilibrated Cholesky implementation. see
 [LAPACK DGESVX documentation](https://netlib.org/lapack/explore-html/d5/dbe/group__gesvx_ga82173a93234afc15d70b64233b3e5bc8.html).
 This small implementation is not LAPACK and does not implement its condition
 estimation, iterative refinement or error-bound reporting.

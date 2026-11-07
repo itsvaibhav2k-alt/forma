@@ -1,8 +1,9 @@
 # Phase 5 — Frozen decision sheet and export
 
-Implementation is complete on `phases`. Native print-preview pagination and a
-saved sample PDF remain **manual acceptance**, at the user's request. Do not treat
-the screen measurements or the test suite as proof of a one-page native PDF.
+Implementation is complete. Phase 7 measurement entry and assembly templates are
+also implemented. The [RC hardening record](rc-hardening.md) separates current
+host verification (including generated, visually inspected Chromium PDFs) from
+remaining presentation-laptop/native-dialog and physical acceptance.
 
 ## 5.1 — Freeze the report payload
 
@@ -15,8 +16,9 @@ payload. It never reads live app state or reruns the structural solver.
 Checks include trial identity, load, brace, preset/solver versions, complete
 node/member outputs, finite numbers, retest source/retained brace/geometry, unique
 measurement IDs and matching included design/version/load/joint. Measurements
-retain units, method, raw readings, resolution, notes and entered assessment;
-displaying an assessment does not establish model validation. Nonfinite values
+retain units, method, raw readings, resolution and conditions. Shared validation
+requires complete evidence and recomputes assessment; a supplied resolved claim
+does not establish model validation. Nonfinite values
 are rejected before JSON serialization can turn them into null.
 
 The builder adds mandatory model, physical-evidence and cost assumptions to any
@@ -63,8 +65,9 @@ The measured screen preflight allows at most 10.3 inches of content, leaving
 0.2 inch below the printable height. Oversized content disables the app's print
 button and explains how to shorten inputs/recapture; no source, note or assumption
 is silently clipped. JSON remains downloadable. Arbitrarily long strings are not
-guaranteed to fit on one page. Browser-native printing outside the app button can
-bypass this preflight, and actual printer/driver settings still require review.
+guaranteed to fit on one page. Native printing also suppresses overfull paper and prints the warning instead;
+the on-screen evidence and JSON remain complete. Printer/driver settings still
+require review.
 
 ## 5.3 — Export verification
 
@@ -79,9 +82,9 @@ invalid-input gating; deep copies of readings; association failures; overflow
 preflight; and print invocation. Boundary tests prohibit live app state in the
 report view and React/solver calls in the pure builder.
 
-`npm run check` passes **178 tests across 17 files**, strict TypeScript checking
+At the original Phase 5 checkpoint, `npm run check` passed **178 tests across 17 files**, strict TypeScript checking
 and the production build. `npm run prepare:report-qa` successfully generates all
-three reference pairs. `git diff --check` passes.
+original three reference pairs (Phase 7 adds a fourth synthetic-evidence case). `git diff --check` passes.
 
 Production-browser checks verified:
 
@@ -97,13 +100,13 @@ Production-browser checks verified:
 - At 375×812, page width remains 375 px and the paper region scrolls separately.
 - No browser console warnings or errors were recorded.
 
-These are screen/data checks. The in-app print dialog could not be inspected and
-Chrome control was not approved. The user elected to perform native PDF QA.
-No sample PDF has been generated or claimed as verified by this phase's automation.
+Those original Phase 5 checks were screen/data checks. The later RC hardening
+run generated and visually inspected a one-page Letter PDF on this host; native
+print-dialog and target-machine acceptance remain separate manual gates.
 
 ### Manual PDF checklist
 
-Use the running production app (`npm run build`, then `npm start`):
+Use the packaged production launcher (`node serve.mjs` from the extracted candidate):
 
 1. Commit P2 at B1, retest at B2, and load the fictional quotes.
 2. Capture without the retest checkbox: confirm the primary result is B1/P2,
@@ -131,7 +134,8 @@ a native browser PDF.
 
 ## Remaining scope
 
-Finish the manual PDF gate before Phase 6's broader offline keyboard/print release
-rehearsal. Physical measurement entry, assembly templates, report import and
-persistent storage remain later work. No structural calculation, preset, trial
-reducer, financial formula, dependency or fixture was changed in this phase.
+Finish the presentation-laptop PDF/offline keyboard checks before release
+acceptance. Physical measurement entry and assembly templates were implemented in
+Phase 7; their physical calibration/observation gates remain manual. Report import
+and persistent storage remain out of scope. RC hardening preserves the existing
+solver, physical defaults and financial formulas.

@@ -1,7 +1,9 @@
 # Forma — native PDF acceptance
 
 Run this on the presentation laptop/browser. This is a manual acceptance task;
-screen layout measurements do not prove native print pagination.
+screen layout measurements do not prove native print pagination. Host-generated
+Chromium PDFs have been visually inspected during RC hardening; that evidence
+does not replace this target-browser/driver check.
 
 Start the extracted bundle with `node serve.mjs` and open
 `http://127.0.0.1:4173/`. Keep the terminal open. Save generated PDFs and JSON files
@@ -21,7 +23,9 @@ outside the candidate folder to preserve its integrity checks.
 5. Repeat with B's annual upkeep blank and long package names. B's upfront cost
    and gap stay known; its discounted total and expected savings become unknown.
    Confirm readable wrapping and one page. Oversized notes should disable the
-   app's print button; shorten them and capture again rather than hiding content.
+   app's print button. Browser-native printing must show the overflow warning,
+   not clipped paper. Full evidence must remain on screen and in JSON. Shorten
+   the inputs and recapture only if that still preserves the intended evidence.
 6. Repeat the complete flow with internet disconnected while the local server
    remains running. Download the JSON snapshot and compare the selected scenarios,
    horizon, costs and report ID with the PDF.
@@ -33,3 +37,8 @@ the intended location is `output/pdf/Forma_Decision_Sheet_Sample.pdf`.
 
 The app cannot control every printer driver or browser default. If page count or
 legibility differs, record the settings and fix/retest before declaring acceptance.
+
+For assembly output, use the separate captured template and Letter landscape at
+100% / actual size. Confirm one page, complete member lengths and the captured
+trial ID. Measure its 100 mm check bar with a physical ruler before use. Do not
+shrink overfull geometry to fit; the overflow guard must block that print.

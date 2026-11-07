@@ -49,13 +49,14 @@ export const blankMeasurementDraft = (target: MeasurementCase): MeasurementDraft
 export function validateReading(reading: Reading, target: MeasurementCase): readonly string[] {
   const errors: string[] = [];
   if (!matchesReading(reading, target)) errors.push('The measurement must match this design, version, load and measured joint.');
-  if (!reading.id.trim() || !reading.method.trim() || typeof reading.notes !== 'string') errors.push('Provide a measurement ID, method and text notes.');
+  if (!reading.id.trim() || !reading.method.trim()) errors.push('Provide a measurement ID and method.');
+  if (typeof reading.notes !== 'string' || !reading.notes.trim()) errors.push('Describe the physical test conditions.');
   if (!Object.hasOwn(unitFactor, reading.units)) return [...errors, 'Use mm, cm or in.'];
   const scale = unitFactor[reading.units];
-  if (!Number.isFinite(reading.displacement * scale)) errors.push('Enter finite vertical displacements in the selected unit.');
-  if (reading.instrumentResolution !== null && (!Number.isFinite(reading.instrumentResolution * scale) || reading.instrumentResolution * scale <= 0)) errors.push('Resolution must be positive and finite, or left blank for unknown.');
-  if (!Array.isArray(reading.rawReadings) || reading.rawReadings.length > 20 || reading.rawReadings.some(value => !Number.isFinite(value * scale))) errors.push('Use at most 20 finite raw readings.');
-  else if (reading.rawReadings.length && Math.abs(mean(reading.rawReadings) - reading.displacement) > 1e-12 * Math.max(1, Math.abs(reading.displacement))) errors.push('Recorded displacement must equal the mean of the raw readings.');
+  if (!Number.isFinite(reading.displacement) || !Number.isFinite(reading.displacement * scale)) errors.push('Enter finite vertical displacements in the selected unit.');
+  if (reading.instrumentResolution !== null && (!Number.isFinite(reading.instrumentResolution) || !Number.isFinite(reading.instrumentResolution * scale) || reading.instrumentResolution * scale <= 0)) errors.push('Resolution must be positive and finite, or left blank for unknown.');
+  if (!Array.isArray(reading.rawReadings) || !reading.rawReadings.length || reading.rawReadings.length > 20 || reading.rawReadings.some(value => !Number.isFinite(value) || !Number.isFinite(value * scale))) errors.push('Enter at least one raw reading, one per line; use at most 20 finite raw readings.');
+  else if (Math.abs(mean(reading.rawReadings) - reading.displacement) > 1e-12 * Math.max(1, Math.abs(reading.displacement))) errors.push('Recorded displacement must equal the mean of the raw readings.');
   return errors;
 }
 
@@ -84,8 +85,6 @@ export function recordMeasurement(draft: MeasurementDraft, target: MeasurementCa
   const rawReadings = draft.raw.split(/\r?\n/).map(line => line.trim()).filter(Boolean).map(measurementNumber);
   const reading: Reading = { id, designId: target.design.id, presetVersion: target.design.presetVersion, appliedLoad: target.load, measuredNodeId: draft.measuredNodeId, units: draft.units, rawReadings, displacement: mean(rawReadings), instrumentResolution: draft.resolution.trim() ? measurementNumber(draft.resolution) : null, method: draft.method.trim(), notes: draft.notes.trim(), assessment: 'unassessed' };
   const errors = [...validateReading(reading, target)];
-  if (!rawReadings.length) errors.push('Enter at least one raw reading, one per line.');
-  if (!reading.notes) errors.push('Describe the physical test conditions.');
   if (errors.length) return { status: 'error', errors };
   try { return { status: 'ok', reading: snapshot({ ...reading, assessment: assessReading(reading, target).status }) }; }
   catch (error) { return { status: 'error', errors: [error instanceof Error ? error.message : 'Invalid measurement.'] }; }

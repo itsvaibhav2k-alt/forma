@@ -31,8 +31,14 @@ it('keeps calculation boundaries independent of the UI and of each other', () =>
     const source = readFileSync(file, 'utf8');
     expect(source).not.toMatch(/from\s+['"]react/);
     expect(source).not.toMatch(/from\s+['"][^'"]*(?:studio|app\/)/);
-    if (structures.includes(file)) expect(source).not.toMatch(/from\s+['"][^'"]*community/);
-    else expect(source).not.toMatch(/from\s+['"][^'"]*structures/);
+    if (structures.includes(file)) {
+      expect(source).not.toMatch(/from\s+['"][^'"]*community/);
+      expect(source).not.toMatch(/from\s+['"][^'"]*engines\/main\/finance/);
+    }
+    else {
+      expect(source).not.toMatch(/from\s+['"][^'"]*structures/);
+      expect(source).not.toMatch(/from\s+['"][^'"]*engines\/main\/(?:analyze|rankBraces)/);
+    }
   }
 });
 

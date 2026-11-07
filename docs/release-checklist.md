@@ -2,7 +2,9 @@
 
 Status: **candidate; not approved for release**. The presentation laptop is a
 different machine from the development Mac. Record evidence on that actual laptop.
-The native PDF check remains assigned to the user; do not infer it from screenshots.
+Host automation has generated and visually inspected Letter report and landscape
+assembly PDFs. The target browser's native print-dialog check remains manual;
+do not infer printer scale or laptop readiness from host screenshots/PDFs.
 Copy this checklist outside the candidate folder before filling it in, so the
 tested payload files and their checksums stay unchanged.
 
@@ -31,7 +33,10 @@ they are not a signature or proof of human acceptance.
 - [ ] Before commit, no numerical ranking/deflection result is revealed.
 - [ ] B1/P2 commits once and shows approximately 1.09% reduction.
 - [ ] Moving to B2 keeps P2, shows 10.46%, and ties P2 + P3.
-- [ ] Restoring the saved trial returns B1/P2/1.09%; history remains intact.
+- [ ] Inspecting Trial 01 shows B1/P2/1.09% read-only, without solving or losing an
+  unfinished draft/retest. Back to current experiment restores it with keyboard focus.
+- [ ] With multiple saved trials, report/measurement/template controls name the
+  selected saved trial; historical capture never borrows the active retest.
 - [ ] Quote edits change only finances; structural edits leave quotes intact.
 - [ ] Blank upkeep is unknown, not zero; upfront and funding gap remain known.
 - [ ] Invalid amounts/settings show errors without old calculated totals.
@@ -81,9 +86,9 @@ The candidate includes same-origin CSP and audited local HTML/CSS references.
 Those are supporting checks, not a substitute for physically disconnecting on
 the actual laptop. Internet disconnection, print inspection and timings are
 manual tasks; no network or browser settings are changed automatically.
-The new portable launcher has not yet been run on a real socket in this session:
-temporary-port approval was declined. Validate its startup and the full flow under
-its CSP on the presentation laptop before relying on the archive for the demo.
+The portable launcher and occupied-port test now pass on a real socket on the
+development host. The packaged CSP/browser flow also passes there. Repeat those
+checks on the presentation laptop before relying on the archive for the demo.
 
 ## 6.3 — Feature freeze, rehearsal and submission
 

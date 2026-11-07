@@ -1,3 +1,7 @@
+> This integration branch combines the hardened phases app/state with main's
+> numerical engines by adapters, without merging unrelated histories. Current
+> evidence and ownership: [combined handoff](main-engine-integration.md).
+
 # Ownership and merge order
 
 Each subphase can be reviewed as a separate PR. Prerequisites mean merged and
@@ -28,7 +32,7 @@ review boundaries are:
 | Subphase | Prerequisite | Deliverables | Verification |
 | --- | --- | --- | --- |
 | 2.1 | 1.3 | `preset.ts`, `validation.ts`, `errors.ts`, preset/validation tests | Canonical geometry and invalid input cases |
-| 2.2 | 2.1 | `analyze.ts`, `linear-system.ts`, solver tests, `src/test/structure-assertions.ts` | Triangle, mechanisms, force balance, numerical scaling, pivot exchange |
+| 2.2 | 2.1 | Main solver plus `analyze.ts` adapter, solver tests, `src/test/structure-assertions.ts` | Triangle, mechanisms, force balance, numerical scaling; main origin and adapter checks |
 | 2.3 | 2.2 | `rank-braces.ts`, matrix/ranking tests, structures exports, benchmark script, package command and documentation | 15 values, ties, independent additions, snapshot isolation, timing |
 
 No shared-contract or fixture changes were needed. Merge 2.1 before 2.2, then 2.3;
@@ -111,8 +115,8 @@ pending, so 6.3 has not declared a release freeze or created a tag.
 
 | Subphase | Prerequisite | Deliverables | Current evidence / remaining gate |
 | --- | --- | --- | --- |
-| 6.1 | 2.3 + 3.3 + 4.3 + 5.3 | Integrated suite, release audit/launcher tests and performance record | App and in-memory tests pass; development keyboard flow and Node benchmark pass; native PDF, outside tester and target-machine timings pending |
-| 6.2 | 6.1 | Portable candidate, hashes, local-only asset audit, dependency-free launcher, instructions | Package integrity checked; actual launcher socket test, target-machine cold start, physical disconnection and offline print pending |
+| 6.1 | 2.3 + 3.3 + 4.3 + 5.3 | Integrated suite, release audit/launcher tests and performance record | App/in-memory/socket tests and packaged development-host keyboard/CSP flow pass; host PDFs inspected; target native-dialog, outside tester and timings pending |
+| 6.2 | 6.1 | Portable candidate, hashes, local-only asset audit, dependency-free launcher, instructions | Package integrity and development-host launcher socket/CSP checks pass; target cold start, physical disconnection and offline print pending |
 | 6.3 | 6.2 | Fixed-candidate metadata, demo script, checklist and submission/disclosure draft | Final clean commit/archive, two timed rehearsals and human submission details pending |
 
 These supporting files can be reviewed while prerequisite manual gates remain

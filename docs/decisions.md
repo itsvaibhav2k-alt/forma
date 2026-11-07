@@ -1,6 +1,7 @@
 # Phase 1.1 — First-release decisions
 
-Status: adopted for this implementation. These are engineering decisions from the
+Status: adopted for this implementation; engine integration is documented in
+[the combined handoff](main-engine-integration.md). These are engineering decisions from the
 agreed plan, not claims that all four human owners have reviewed or been assigned.
 
 ## Product scope
@@ -32,8 +33,8 @@ a 1 N load for the independent triangle test.
 | Crossings | Only labeled nodes are joints; crossing bars are unconnected |
 | Forces | N; positive axial force is tension, negative is compression |
 | Ranking | Minimum absolute vertical displacement at the loaded joint |
-| Ties | Full precision; tolerance max(1e-9 mm, 1e-6 × best displacement) |
-| Zero baseline | Absolute change only; no percentage division by zero |
+| Ties | Full precision; tolerance max(1e-9 mm, 1e-8 × best displacement), from main |
+| Zero baseline | Absolute change only at baseline ≤1e-12 mm, from main |
 | History | Immutable session snapshots; no persistence across reloads |
 | Printing | Frozen selected-trial payload; one US Letter page |
 | Assets | Bundled local assets or system fonts; no required CDN/API |
@@ -49,7 +50,8 @@ service over the chosen horizon. Record material donations at actual purchase
 cost and explain them in a note; never subtract the donation twice.
 
 Initial costs are materials + freight + installation. Cash contributions are
-nonnegative and cannot exceed those costs. Upfront cost subtracts the contribution.
+nonnegative. Main’s engine caps the applied contribution at those costs; excess
+is not a credit against upkeep. Upfront cost subtracts the applied contribution.
 Budget describes available upfront cash and changes only the funding gap.
 
 The horizon is a positive integer number of years. The real discount rate is a

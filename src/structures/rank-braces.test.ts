@@ -4,7 +4,7 @@ import { bridgeFixture } from '../shared/fixtures/bridge';
 import { expectEquilibrium } from '../test/structure-assertions';
 import { analyze } from './analyze';
 import { createBraceMember, createBridgePreset } from './preset';
-import { bestPanelIds, deflectionChange, rankBraces } from './rank-braces';
+import { rankBraces } from './rank-braces';
 
 function ranked(baseline: Design, load: Load): RankedBraces {
   const result = rankBraces(baseline, load);
@@ -111,23 +111,5 @@ describe('independent brace ranking', () => {
       expect(Object.keys(result).sort()).toEqual(['code', 'memberIds', 'message', 'nodeIds', 'status']);
     }
     expect(rankBraces({ ...baseline, members: [...baseline.members, baseline.members[0]!] }, load)).toMatchObject({ status: 'error', code: 'DUPLICATE_MEMBER' });
-  });
-});
-
-describe('comparison precision', () => {
-  it('keeps zero-baseline change absolute and preserves negative improvements', () => {
-    expect(deflectionChange(0, 0)).toEqual({ kind: 'absolute-only', reductionMm: 0 });
-    expect(deflectionChange(0, 0.1)).toEqual({ kind: 'absolute-only', reductionMm: -0.1 });
-    expect(deflectionChange(1, 2)).toEqual({ kind: 'relative', reductionMm: -1, reductionPercent: -100 });
-    expect(deflectionChange(1e-12, 5e-13)).toEqual({ kind: 'relative', reductionMm: 5e-13, reductionPercent: 50 });
-  });
-
-  it('does not turn values that display the same into ties', () => {
-    expect(bestPanelIds({ P1: 0.0626241, P2: 0.0626243, P3: 0.07, P4: 0.08 })).toEqual(['P1']);
-  });
-
-  it('uses the absolute tolerance floor at zero and relative tolerance at larger values', () => {
-    expect(bestPanelIds({ P1: 0, P2: 0.9e-9, P3: 1.1e-9, P4: 1 })).toEqual(['P1', 'P2']);
-    expect(bestPanelIds({ P1: 1, P2: 1 + 0.9e-6, P3: 1 + 1.1e-6, P4: 2 })).toEqual(['P1', 'P2']);
   });
 });

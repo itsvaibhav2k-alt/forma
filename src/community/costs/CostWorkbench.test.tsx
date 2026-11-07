@@ -61,8 +61,8 @@ it('keeps upfront affordability when upkeep is cleared and treats zero as a know
 it('clears stale totals on invalid raw input and exposes an associated field error', async () => {
   await loadExample();
   const input = screen.getByLabelText('Package B Cash contribution (USD)');
-  fireEvent.change(input, { target: { value: '22000' } });
-  expect(screen.getByRole('alert')).toHaveTextContent('Cash contributions cannot exceed');
+  fireEvent.change(input, { target: { value: '-1' } });
+  expect(screen.getByRole('alert')).toHaveTextContent('finite, nonnegative');
   expect(input).toHaveAttribute('aria-invalid', 'true');
   expect(screen.queryByText('$24,838.59')).not.toBeInTheDocument();
   fireEvent.change(input, { target: { value: '0' } });
@@ -93,4 +93,13 @@ it('resets the comparison explicitly and keeps blanks unknown', async () => {
   expect(screen.getByLabelText('Package A Materials (USD)')).toHaveValue('');
   expect(screen.queryByText('$26,677.18')).not.toBeInTheDocument();
   expect(screen.getByText('No comparison yet')).toBeVisible();
+});
+
+it('caps excess cash contributions at upfront cost without crediting maintenance', async () => {
+  await loadExample();
+  fireEvent.change(screen.getByLabelText('Package B Cash contribution (USD)'), { target: { value: '30000' } });
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  expect(resultsFor('B')).toHaveTextContent('$0.00');
+  expect(resultsFor('B')).toHaveTextContent('$3,838.59');
+  expect(screen.getAllByText(/Excess does not offset upkeep/)).toHaveLength(2);
 });
