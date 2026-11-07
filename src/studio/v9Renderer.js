@@ -792,7 +792,7 @@ export function renderV9Assembly(options) {
 
 /** Original v9 soft-shadow rasterizer runs off the main interaction thread. */
 export function createV9LightingWorker() {
-  const source = calcAssemblyStudioPixels.toString() + '\nself.onmessage=e=>{const pixels=calcAssemblyStudioPixels(e.data.geometry);self.postMessage({requestId:e.data.requestId,pixels},[pixels.data.buffer]);};';
+  const source = 'const calcAssemblyStudioPixels = (' + calcAssemblyStudioPixels.toString() + ');\nself.onmessage=e=>{const pixels=calcAssemblyStudioPixels(e.data.geometry);self.postMessage({requestId:e.data.requestId,pixels},[pixels.data.buffer]);};';
   const url = URL.createObjectURL(new Blob([source], {type:'text/javascript'}));
   try { return new Worker(url); } finally { URL.revokeObjectURL(url); }
 }
