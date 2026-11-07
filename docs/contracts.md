@@ -17,8 +17,9 @@ alone does not create a snapshot.
 
 The shared function types are interface declarations, not executable stubs.
 Phase 2 implements `analyze` and `rankBraces` in `src/structures`. Phase 3 implements
-`commitPrediction` in `src/app/experiment/state.ts`; cost and report ports await
-their implementation phases. They do not return placeholder successes.
+`commitPrediction` in `src/app/experiment/state.ts`. Phase 4 implements
+`compareQuotes` in `src/community/costs/engine`; the report port awaits Phase 5.
+Unimplemented ports do not return placeholder successes.
 Object arguments make named units and
 source fields explicit. `CompareQuotes` packages the five positional arguments
 from the planning document into `QuoteInputs`. Commit receives validated results
@@ -61,8 +62,10 @@ ranking. It does not overwrite the source trial. Displaying another trial change
 selection, not the saved result. A report must use that selected stored result.
 
 Integration owns the only `ExperimentState` and reducer. Studio receives state
-and callbacks, never a competing trial store. Financial inputs/readings live in
-`CommunityState` and use separate events.
+and callbacks, never a competing trial store. The community contracts keep
+financial inputs/readings separate. Phase 4 uses an app-mounted `useQuotes` hook
+for editable draft strings and derived `QuoteInputs`/`CostResult`; it never sends
+financial changes through the experiment reducer. Reading events await later work.
 
 | Event | Required reducer behavior in Phase 3 |
 | --- | --- |
@@ -104,10 +107,18 @@ unknown inputs. Expected annual savings may be negative even though user-entered
 costs must be nonnegative. Financial validation errors are separate from unknown
 values: unknown data is allowed; a negative entered purchase cost is not.
 
-`QuoteInputs.packages` is an exact pair. Phase 4 must validate unique package IDs,
-finite numbers, nonnegative values/rate, positive whole years, and contribution
-limits. Use unrounded calculations; round currency only for display. The contracts
-are not a runtime parser or an implementation of these calculations.
+`QuoteInputs.packages` is an exact pair. Phase 4 validates unique package IDs,
+nonempty names and matching declared scope, finite nonnegative values/rate,
+positive safe-integer years, source references and contribution limits. It uses
+unrounded calculations and rounds currency only for display. The runtime parser
+and validation live in the cost module; see [Phase 4](phase-4.md) for formulas and
+numerical policy.
+
+`createCostSnapshot(quotes)` recomputes and freezes a plain `{ status, quotes,
+costs }` snapshot or returns validation errors. It accepts unknown amounts without
+inventing values. Phase 5 can compose this with the selected trial. The shared
+`DeepReadonly` utility now preserves tuple lengths; domain contract shapes and
+the runtime clone/freeze behavior are unchanged.
 
 ## Measurements and reporting
 
@@ -124,8 +135,10 @@ No global store access is permitted inside the print view.
 
 ## Dependency rules
 
-Structures imports shared contracts only, never React or community costs. Costs
-imports shared contracts only, never structures or studio. Shared contracts may
+Structures imports shared contracts only, never React or community costs. The cost
+engine imports shared contracts/utilities only, never React, structures or studio.
+Financial forms can import React and their own engine, but not experiment,
+structures or studio modules. Shared contracts may
 refer to each other but never to implementation modules. App orchestration can
 compose ports after the underlying modules pass their own tests.
 

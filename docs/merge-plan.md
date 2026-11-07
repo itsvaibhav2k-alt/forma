@@ -65,6 +65,25 @@ only updates its ownership comment. No dependency or lockfile change is needed.
 `src/studio/index.ts` and the app wiring require the completed 3.1–3.3 components.
 See [Phase 3 acceptance](phase-3.md) for verification and remaining release gates.
 
+## Phase 4 handoff
+
+Phase 4 is implemented on `phases`. Review or extract it in this order:
+
+| Subphase | Prerequisite | Deliverables | Evidence |
+| --- | --- | --- | --- |
+| 4.1 | 1.3 | `costs/engine/validation.ts`, `compareQuotes.ts`, engine tests and pure exports | 3%/0% examples, independent annuity sum, exact/above/below break-even, missing inputs, contributions and numerical limits |
+| 4.2 | 4.1 | Draft parser, `useQuotes`, `CostWorkbench`, `CostSummary`, styles and form tests | Unknown versus zero, explicit sources, example relabeling, visible validation and live calculations |
+| 4.3 | 3.3 + 4.2 | App wiring, isolation tests, `engine/snapshot.ts` and boundary checks | Financial edits preserve trials/retests; structural actions preserve quotes; frozen JSON-serializable cost snapshots |
+
+An integration-owned prerequisite for the 4.3 snapshot adapter is the type-only
+`DeepReadonly` tuple fix in `src/shared/snapshot.ts` and its type assertion test.
+It preserves the exact two-package tuple without changing runtime behavior or
+domain contract shapes. If splitting PRs, defer the `createCostSnapshot` barrel
+export until that prerequisite and its adapter have landed. Boundary tests now
+distinguish the pure cost engine from its React forms, while forbidding structural
+imports throughout the cost module. No dependency, lockfile or fixture changes.
+See [Phase 4 acceptance](phase-4.md) for formulas, checks and the Phase 5 handoff.
+
 ## Later integration order
 
 1. 2.1 → 2.2 solver → 2.3 ranking.

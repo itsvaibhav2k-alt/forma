@@ -3,13 +3,14 @@
 A local browser workbench for a one-brace truss experiment, an independent package
 cost comparison, and a selected-trial decision sheet.
 
-**Phases 1–3 are implemented.** Choose a load position and brace, commit your
+**Phases 1–4 are implemented.** Choose a load position and brace, commit your
 prediction, then compare all four placements using the tested structural engine.
 Drag the load or use the keyboard to retest the same brace. Saved trials preserve
 their original results for the session. The bridge shows original/modified
 deformation at one magnification and offers signed force and reaction tables.
-Editable costs belong to Phase 4 and printing to Phase 5. No fixture numbers are
-used as calculated results.
+Compare two equal-scope packages using editable, sourced amounts, upfront funding
+gaps, discounted totals and a break-even upkeep threshold. Printing belongs to
+Phase 5. No fixture numbers are used as calculated results.
 
 ## Run locally
 
@@ -35,7 +36,7 @@ npm start        # serves dist at http://127.0.0.1:4173
 The production build uses local assets and system fonts. Once dependencies are
 installed and `dist` is built, the local server can serve the experiment without
 an internet connection. The full offline judging/printing release gate belongs to
-Phase 6. Reloading clears session-only trials. No database, remote service, or
+Phase 6. Reloading clears session-only trials and quote inputs. No database, remote service, or
 account is required.
 
 ## Try the experiment
@@ -50,6 +51,24 @@ supports arrows and Home/End. Commit, history, navigation and view controls work
 with the keyboard. Results remain hidden until commit. Deformed overlays share
 the displayed **200×** magnification; numeric values remain in actual mm/N.
 
+## Try the cost comparison
+
+1. Open **Compare build options**. Prices start blank and remain unknown until entered.
+2. Choose **Load fictional example** to try the labeled specification inputs.
+   At 10 years and 3%, upfront costs are **$19,000 / $21,000**, funding gaps
+   **$0 / $1,000**, and discounted totals **$26,677.18 / $24,838.59**.
+3. The higher-upfront option needs **$234.46/year** in upkeep savings; the example
+   expects **$450/year**. Set the rate to 0% and the threshold becomes **$200/year**.
+4. Clear annual upkeep: its discounted total becomes unknown while upfront
+   affordability remains available. Enter `0` only for a known zero cost.
+5. Edit amounts, source references, scope, budget, horizon or rate. Return to
+   **Experiment**: saved trials and the active retest remain unchanged.
+
+Amounts use real USD and constant year-end upkeep. Cash contributions are deducted
+once and cannot exceed initial costs. The common scope is a user declaration;
+source labels do not independently verify supplier quotes. These are separate
+planning inputs, not prices inferred from the tabletop bridge.
+
 ## Handoff documents
 
 - [Phase 1 decisions](docs/decisions.md): scope, units, stack, and explicit exclusions.
@@ -58,6 +77,7 @@ the displayed **200×** magnification; numeric values remain in actual mm/N.
 - [Phase 1 acceptance](docs/phase-1.md): what was delivered and how to verify it.
 - [Phase 2 acceptance and API](docs/phase-2.md): preset, solver, ranking, numerical policy and benchmark.
 - [Phase 3 acceptance and handoff](docs/phase-3.md): interaction, trial state, live integration and browser checks.
+- [Phase 4 acceptance and handoff](docs/phase-4.md): cost formulas, inputs, validation, domain isolation and report snapshot adapter.
 - [Ownership and merge order](docs/merge-plan.md): the next independent work streams.
 - [Full phased plan](output/pdf/Forma_Phased_Build_and_Design_Review.pdf): the planning PDF.
 
@@ -81,8 +101,8 @@ The boundary tests protect that separation.
 
 ## Next work
 
-The next work is **Phase 4 (cost calculations, editable packages and domain
-isolation)**, followed by Phase 5 reporting. Keep one
+The next work is **Phase 5 (immutable decision sheet, print layout and export
+acceptance)**. Keep one
 writer per module and put any shared-contract changes in a preceding
 integration-owned PR. No later-phase function returns a fake successful result.
 

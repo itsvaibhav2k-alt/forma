@@ -1,2 +1,4 @@
-/** Phase 4 owns calculations and forms. Unknown amounts are not zero. */
+export { compareQuotes, assessSavings } from './engine/compareQuotes';
+export { validateQuoteInputs } from './engine/validation';
+export { createCostSnapshot, type CostSnapshot } from './engine/snapshot';
 export type { CompareQuotes, QuoteInputs, CostResult, AmountInput } from '../../shared';

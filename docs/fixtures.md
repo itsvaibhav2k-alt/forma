@@ -4,7 +4,8 @@ The fixture directory contains independently transcribed expected inputs and
 outputs. It is not a solver, preset generator, or financial calculator. Phase 1
 checks transcription, data shape, immutability and isolation. Phase 2 tests the
 production structural engine against the triangle, invalid designs and all 15
-bridge values. Financial calculations remain unimplemented.
+bridge values. Phase 4 tests the production cost calculator against the independent
+financial examples, zero-rate limits and break-even cases.
 
 ## Source material
 
@@ -46,8 +47,13 @@ equilibrium values with an appropriate documented absolute tolerance. Full-preci
 engine values, not this rounded table, drive real ranking and gain calculations.
 
 The financial expected totals are rounded to cents, so the fixture records a
-half-cent display tolerance. Later tests must separately verify unrounded equality
-at the break-even threshold and behavior immediately above and below it.
+half-cent display tolerance. Phase 4 separately verifies unrounded equality at the
+break-even threshold and savings immediately above and below it at both 3% and 0%.
+The finite sum of discounted yearly payments supplies an independent factor check.
+
+The cost screen can explicitly load fictional example **inputs**, labeled as demo
+assumptions. This input-only seed is defined in `costs/draft.ts`; it imports no
+fixture and carries no precomputed results. Every displayed total uses the engine.
 
 ## Mock trial limitation
 

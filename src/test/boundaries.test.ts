@@ -26,12 +26,18 @@ it('keeps development fixtures out of runtime modules and the shared barrel', ()
 
 it('keeps calculation boundaries independent of the UI and of each other', () => {
   const structures = sourceFiles(join(root, 'structures'));
-  const costs = sourceFiles(join(root, 'community/costs'));
+  const costs = [...sourceFiles(join(root, 'community/costs/engine')), join(root, 'community/costs/index.ts')];
   for (const file of [...structures, ...costs]) {
     const source = readFileSync(file, 'utf8');
     expect(source).not.toMatch(/from\s+['"]react/);
     expect(source).not.toMatch(/from\s+['"][^'"]*(?:studio|app\/)/);
     if (structures.includes(file)) expect(source).not.toMatch(/from\s+['"][^'"]*community/);
     else expect(source).not.toMatch(/from\s+['"][^'"]*structures/);
+  }
+});
+
+it('keeps financial forms and draft state independent of structural and experiment modules', () => {
+  for (const file of sourceFiles(join(root, 'community/costs'))) {
+    expect(readFileSync(file, 'utf8')).not.toMatch(/from\s+['"][^'"]*(?:structures|studio|app\/)/);
   }
 });
