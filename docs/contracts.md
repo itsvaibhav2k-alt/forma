@@ -101,7 +101,9 @@ saved original can remain visible during a failed retest.
 
 The app retains this state across navigation. Studio owns only presentation
 preferences (which overlay is shown and whether force colors are enabled), never
-a competing trial store. Reload clears all trials. Events are internal typed
+a competing trial store. Without backend configuration, reload clears all trials. Configured project storage
+can save and restore the complete workspace; inspection is validated separately
+from its preserved active draft/retest. Events are internal typed
 messages, not an untrusted network/import format. If the synchronous adapter is
 later made asynchronous, add request identities to retest failures before allowing
 out-of-order completions; that is outside this implementation.
@@ -205,3 +207,14 @@ compose ports after the underlying modules pass their own tests.
 Fixture imports belong in tests or an explicitly separate development harness.
 No runtime module or shared barrel may import or re-export fixtures. The Phase 1
 boundary test enforces this rule for normal module imports.
+
+
+## Persisted legacy projects
+
+The optional project parser defaults a missing `inspectedTrialId` to null and
+validates non-null IDs against saved history. It accepts the current solver and the
+known phases solver `forma-truss-2d-v1`, retaining original versions and values.
+Stored legacy scenarios remain read-only; new predictions use the current solver.
+Retests cannot cross solver versions. Frozen report and pattern payloads retain
+their original provenance when a new prediction starts. No database migration or
+shared trial/state record shape changes are required for this compatibility path.

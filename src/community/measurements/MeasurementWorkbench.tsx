@@ -4,8 +4,8 @@ import { assessReading, blankMeasurementDraft, matchesReading, recordMeasurement
 import type { useMeasurements } from './useMeasurements';
 import './measurements.css';
 
-type Props = ReturnType<typeof useMeasurements> & { cases: readonly MeasurementCase[] };
-export function MeasurementWorkbench({ cases, readings, drafts, selectedKey, setSelectedKey, setDraft, addReading, removeReading }: Props) {
+type Props = ReturnType<typeof useMeasurements> & { cases: readonly MeasurementCase[]; projectStorage?: boolean };
+export function MeasurementWorkbench({ cases, readings, drafts, selectedKey, setSelectedKey, setDraft, addReading, removeReading, projectStorage }: Props) {
   const target = cases.find(item => item.key === selectedKey) ?? cases[0];
   const [feedback, setFeedback] = useState<{ key: string; errors: readonly string[]; saved: boolean } | null>(null);
   if (!target) return <section className="measurement-empty"><h2>Select a saved trial first</h2><p>Commit a prediction or restore a saved trial to record measurements for its original and braced designs. No measurement recorded.</p></section>;
@@ -19,7 +19,7 @@ export function MeasurementWorkbench({ cases, readings, drafts, selectedKey, set
   }
   const currentFeedback = feedback?.key === target.key ? feedback : null;
   return <div className="measurement-workbench">
-    <p className="measurement-intro">Enter actual observations only. Vertical movement is positive downward and negative upward. This form records a test; it does not certify agreement with the model. Inputs and saved readings stay in this session.</p>
+    <p className="measurement-intro">Enter actual observations only. Vertical movement is positive downward and negative upward. This form records a test; it does not certify agreement with the model. {projectStorage ? 'Save a project once to keep inputs and readings; further edits autosave.' : 'Inputs and saved readings stay in this session.'}</p>
     <section className="workspace-card measurement-editor" aria-labelledby="measurement-heading"><div className="card-heading"><h2 id="measurement-heading">Record a physical test</h2><span className="tag">Optional evidence</span></div><div className="measurement-fields">
       <label htmlFor="measurement-case">Design and load case</label><select id="measurement-case" value={target.key} onChange={event => { setSelectedKey(event.target.value); setFeedback(null); }}>{cases.map(item => <option key={item.key} value={item.key}>{item.label}</option>)}</select>
       <p className="input-hint">{target.design.id} · {target.design.presetVersion} · applied load ({target.load.fxN}, {target.load.fyN}) N at {target.load.nodeId}. Record actual load sharing and supports below.</p>

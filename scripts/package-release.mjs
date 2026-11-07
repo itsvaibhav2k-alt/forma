@@ -5,7 +5,9 @@ import { auditAssets, fileInventory, sha256, verifyCandidate } from './release-a
 
 // Always recheck/rebuild before packaging; invoking this through npm supplies its CLI path.
 if (!process.env.npm_execpath) throw new Error('Run npm run release:prepare.');
-execFileSync(process.execPath, [process.env.npm_execpath, 'run', 'check'], { stdio: 'inherit' });
+// Portable presentation candidates remain explicitly offline/session-only.
+// Do not bake the developer's local or hosted backend settings into the archive.
+execFileSync(process.execPath, [process.env.npm_execpath, 'run', 'check'], { stdio: 'inherit', env: { ...process.env, VITE_SUPABASE_URL: '', VITE_SUPABASE_PUBLISHABLE_KEY: '' } });
 const benchmark = JSON.parse(execFileSync(process.execPath, ['scripts/benchmark-structures.mjs'], { encoding: 'utf8' }));
 const assetAudit = await auditAssets(resolve('dist'));
 const git = args => execFileSync('git', args, { encoding: 'utf8' }).trim();

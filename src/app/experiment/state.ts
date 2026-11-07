@@ -58,7 +58,7 @@ export function experimentReducer(state: ExperimentState, event: ExperimentEvent
     case 'retest/show': {
       const trial = selectedTrial(state);
       const value = event.value;
-      if (round.phase !== 'revealed' || !trial || round.trialId !== trial.id || value.sourceTrialId !== trial.id ||
+      if (round.phase !== 'revealed' || !trial || trial.solverVersion !== SOLVER_VERSION || round.trialId !== trial.id || value.sourceTrialId !== trial.id ||
           value.chosenPanelId !== trial.chosenPanelId || !matches(value.results, value.load, trial.presetVersion)) return state;
       return { ...state, retest: { status: 'ready', value: snapshot(value) } };
     }
