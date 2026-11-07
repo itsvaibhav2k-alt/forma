@@ -1,0 +1,74 @@
+// @vitest-environment jsdom
+import { cleanup, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, expect, it, vi } from 'vitest';
+import { rankBraces } from '../structures';
+import { App } from './App';
+
+afterEach(cleanup);
+
+it('preserves an unfinished P4/B3 draft through keyboard history inspection and return', async () => {
+  const user = userEvent.setup(), ranker = vi.fn(rankBraces);
+  render(<App ranker={ranker} />);
+  await user.click(screen.getByRole('radio', { name: 'P2' }));
+  await user.click(screen.getByRole('button', { name: 'Commit prediction' }));
+  await user.click(screen.getByRole('button', { name: 'Start another prediction' }));
+  await user.click(screen.getByRole('radio', { name: 'P4' }));
+  await user.click(screen.getByRole('radio', { name: 'B3 Right' }));
+  const history = screen.getByRole('button', { name: /Trial 01 · Load B1/ });
+  history.focus(); await user.keyboard('{Enter}');
+  const back = screen.getByRole('button', { name: 'Back to current experiment' });
+  expect(back).toHaveFocus();
+  expect(screen.getByRole('region', { name: 'History inspection' })).toHaveTextContent('Trial 01 · P2 at B1');
+  expect(screen.getByRole('radio', { name: 'B2 Center' })).toBeDisabled();
+  const slider = screen.getByRole('slider');
+  expect(slider).toHaveAttribute('aria-disabled', 'true');
+  slider.focus(); await user.keyboard('{End}');
+  expect(screen.getByRole('radio', { name: 'B1 Left' })).toBeChecked();
+  back.focus(); await user.keyboard('{Enter}');
+  expect(history).toHaveFocus();
+  expect(screen.getByRole('radio', { name: 'P4' })).toBeChecked();
+  expect(screen.getByRole('radio', { name: 'B3 Right' })).toBeChecked();
+  expect(screen.getByText('Results hidden')).toBeVisible();
+  expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  expect(ranker).toHaveBeenCalledOnce();
+});
+
+it('captures the explicitly inspected trial without borrowing another trial’s retest, then restores it', async () => {
+  const user = userEvent.setup(), ranker = vi.fn(rankBraces);
+  render(<App ranker={ranker} />);
+  await user.click(screen.getByRole('radio', { name: 'P2' }));
+  await user.click(screen.getByRole('button', { name: 'Commit prediction' }));
+  await user.click(screen.getByRole('button', { name: 'Start another prediction' }));
+  await user.click(screen.getByRole('radio', { name: 'P4' }));
+  await user.click(screen.getByRole('radio', { name: 'B3 Right' }));
+  await user.click(screen.getByRole('button', { name: 'Commit prediction' }));
+  await user.click(screen.getByRole('radio', { name: 'B2 Center' }));
+  const current = screen.getByRole('region', { name: 'Same-brace retest' }).textContent;
+  await user.click(screen.getByRole('checkbox', { name: /Include the current B2 retest/ }));
+  await user.click(screen.getByRole('button', { name: /Trial 01 · Load B1/ }));
+  expect(screen.queryByRole('checkbox', { name: /Include the current/ })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Record measurements' }));
+  expect(screen.getByRole('combobox', { name: 'Design and load case' }).textContent).not.toContain('Retest');
+  await user.click(screen.getByRole('button', { name: 'Experiment' }));
+  await user.click(screen.getByRole('button', { name: 'Braced assembly template' }));
+  expect(screen.getByRole('article', { name: 'Captured assembly template' })).toHaveTextContent('P2');
+  await user.click(screen.getByRole('button', { name: 'Compare build options' }));
+  await user.click(screen.getByRole('button', { name: 'Load fictional example' }));
+  await user.click(screen.getByRole('button', { name: 'Decision sheet' }));
+  const sheet = screen.getByRole('article', { name: 'Captured decision sheet' });
+  expect(within(sheet).getByRole('region', { name: '02 / Predicted' })).toHaveTextContent('1.09%');
+  expect(sheet).not.toHaveTextContent('Scenario R');
+  const captured = sheet.textContent;
+  await user.click(screen.getByRole('button', { name: 'Experiment' }));
+  await user.click(screen.getByRole('button', { name: /Trial 02 · Load B3/ }));
+  expect(screen.getByRole('region', { name: 'History inspection' })).toHaveTextContent('P4 at B3');
+  await user.click(screen.getByRole('button', { name: 'Back to current experiment' }));
+  expect(screen.getByRole('region', { name: 'Same-brace retest' }).textContent).toBe(current);
+  expect(screen.getByRole('radio', { name: 'P4' })).toBeChecked();
+  expect(screen.getByRole('radio', { name: 'B2 Center' })).toBeChecked();
+  expect(screen.getByRole('checkbox', { name: /Include the current B2 retest/ })).toBeChecked();
+  expect(ranker).toHaveBeenCalledTimes(3);
+  await user.click(screen.getByRole('button', { name: 'Captured sheet' }));
+  expect(screen.getByRole('article').textContent).toBe(captured);
+});

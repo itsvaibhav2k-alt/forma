@@ -1,8 +1,6 @@
-export type * from './types';
-export { immutableCopy } from './immutable';
-export type { DeepReadonly } from './immutable';
-export {
-  JUDGE_PRESET_VERSION, JUDGE_PRESET, TRIANGLE_DESIGN, TRIANGLE_LOAD, TRIANGLE_EXPECTED,
-  UNSTABLE_SQUARE_DESIGN, UNSTABLE_SQUARE_LOAD, BRIDGE_EXPECTED, DEMO_FINANCE_INPUTS,
-  FINANCE_EXPECTED, FOUNDATION_TRIAL_STATE, FOUNDATION_FINANCE_MODEL, DEFAULT_ASSUMPTIONS,
-} from './fixtures';
+export * from './constants';
+export type * from './structures';
+export type * from './community';
+export type * from './report';
+export type * from './state';
+export type * from './interfaces';
