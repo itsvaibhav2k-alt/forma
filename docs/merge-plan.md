@@ -84,6 +84,25 @@ distinguish the pure cost engine from its React forms, while forbidding structur
 imports throughout the cost module. No dependency, lockfile or fixture changes.
 See [Phase 4 acceptance](phase-4.md) for formulas, checks and the Phase 5 handoff.
 
+## Phase 5 handoff
+
+Phase 5's implementation is complete on `phases`; native browser PDF pagination
+and a saved sample PDF remain the user's manual acceptance check. Review order:
+
+| Subphase | Prerequisite | Deliverables | Evidence |
+| --- | --- | --- | --- |
+| 5.1 | 3.3 + 4.3 | `report/buildDecisionSheet.ts`, builder tests and pure exports | Saved-trial/retest association, financial consistency, readings, deep freezing and serialization |
+| 5.2 | 5.1 | `DecisionSheet`, `ReportSketch`, `ReportPreview`, print CSS | Five sections, captured geometry, grayscale signed forces, source labels and overflow protection |
+| 5.3 | 5.2 | App capture/navigation, `app/report.test.tsx`, boundary checks, `prepare-report-qa.mjs` and manual checklist | B1 captured while B2 is active; later quote/trial changes preserve the sheet; JSON download; complete/missing/long-label browser checks |
+
+The shared report shape is unchanged (only its documentation comment changed).
+No dependencies or lockfile changes. `App` owns the captured payload and explicit
+replacement; report presentation owns no experiment/quote state. The existing
+cost snapshot helper remains available; this builder also checks the supplied
+financial result against a fresh calculation, so stale result/input pairs fail.
+See [Phase 5 acceptance](phase-5.md), especially the remaining manual PDF gate,
+before declaring the release ready.
+
 ## Later integration order
 
 1. 2.1 → 2.2 solver → 2.3 ranking.

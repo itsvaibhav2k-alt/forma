@@ -10,7 +10,7 @@ export interface ReportInputs {
   readonly assumptions: readonly string[];
 }
 
-/** Phase 5 will clone and freeze this entire payload, including costs and readings. */
+/** Phase 5 clones and freezes this entire payload, including costs and readings. */
 export interface ReportPayload extends ReportInputs {
   readonly schemaVersion: 1;
   readonly reportId: string;

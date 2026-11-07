@@ -3,14 +3,16 @@
 A local browser workbench for a one-brace truss experiment, an independent package
 cost comparison, and a selected-trial decision sheet.
 
-**Phases 1–4 are implemented.** Choose a load position and brace, commit your
+**Phases 1–5 are implemented.** Phase 5's native PDF acceptance check remains a
+manual handoff. Choose a load position and brace, commit your
 prediction, then compare all four placements using the tested structural engine.
 Drag the load or use the keyboard to retest the same brace. Saved trials preserve
 their original results for the session. The bridge shows original/modified
 deformation at one magnification and offers signed force and reaction tables.
 Compare two equal-scope packages using editable, sourced amounts, upfront funding
-gaps, discounted totals and a break-even upkeep threshold. Printing belongs to
-Phase 5. No fixture numbers are used as calculated results.
+gaps, discounted totals and a break-even upkeep threshold. Capture an immutable
+decision sheet, print/save it as PDF, or download the full snapshot as JSON.
+No fixture numbers are used as calculated results.
 
 ## Run locally
 
@@ -29,6 +31,7 @@ port is strict so a collision is reported rather than silently changing the URL.
 npm run check     # tests, strict TypeScript checking, production build
 npm run test:watch
 npm run bench:structures  # five-design calculation timing, no browser UI
+npm run prepare:report-qa # prepares three frozen HTML/JSON cases for manual PDF checks
 npm run build
 npm start        # serves dist at http://127.0.0.1:4173
 ```
@@ -36,7 +39,7 @@ npm start        # serves dist at http://127.0.0.1:4173
 The production build uses local assets and system fonts. Once dependencies are
 installed and `dist` is built, the local server can serve the experiment without
 an internet connection. The full offline judging/printing release gate belongs to
-Phase 6. Reloading clears session-only trials and quote inputs. No database, remote service, or
+Phase 6. Reloading clears session-only trials, quote inputs and captured sheets. No database, remote service, or
 account is required.
 
 ## Try the experiment
@@ -69,6 +72,25 @@ once and cannot exceed initial costs. The common scope is a user declaration;
 source labels do not independently verify supplier quotes. These are separate
 planning inputs, not prices inferred from the tabletop bridge.
 
+## Capture a decision sheet
+
+1. Commit or select a saved trial. In **Compare build options**, supply a common
+   scope and correct any validation errors; prices can remain unknown.
+2. Choose **Decision sheet** below the workbench. The primary result always comes
+   from the selected saved trial. Check **Include the current retest** only if you
+   want that separately labeled scenario included.
+3. Review the five sections, then choose **Print / Save PDF**. Use US Letter,
+   portrait, 100% scale and turn browser headers/footers off. Confirm **one page**
+   in your print preview before saving. Native PDF pagination is pending manual QA.
+4. Return to **Captured sheet** after edits to see the original snapshot. Choose
+   **Capture new sheet** from the workbench to explicitly replace it.
+
+The sheet uses the stored analysis without solving again. It freezes costs,
+sources, assumptions and readings too; measurement entry remains optional later
+work. Long content is preserved, and the print button is disabled when the screen
+layout exceeds the one-page allowance. Shorten notes and recapture, or download
+the complete JSON snapshot. This download is archival; importing it is not implemented.
+
 ## Handoff documents
 
 - [Phase 1 decisions](docs/decisions.md): scope, units, stack, and explicit exclusions.
@@ -78,6 +100,7 @@ planning inputs, not prices inferred from the tabletop bridge.
 - [Phase 2 acceptance and API](docs/phase-2.md): preset, solver, ranking, numerical policy and benchmark.
 - [Phase 3 acceptance and handoff](docs/phase-3.md): interaction, trial state, live integration and browser checks.
 - [Phase 4 acceptance and handoff](docs/phase-4.md): cost formulas, inputs, validation, domain isolation and report snapshot adapter.
+- [Phase 5 acceptance and handoff](docs/phase-5.md): frozen reports, print layout, export checks and the manual PDF checklist.
 - [Ownership and merge order](docs/merge-plan.md): the next independent work streams.
 - [Full phased plan](output/pdf/Forma_Phased_Build_and_Design_Review.pdf): the planning PDF.
 
@@ -101,8 +124,8 @@ The boundary tests protect that separation.
 
 ## Next work
 
-The next work is **Phase 5 (immutable decision sheet, print layout and export
-acceptance)**. Keep one
+The next work is the **manual Phase 5 PDF check**, then **Phase 6 (integrated
+release checks, offline rehearsal and freeze)**. Keep one
 writer per module and put any shared-contract changes in a preceding
 integration-owned PR. No later-phase function returns a fake successful result.
 

@@ -18,8 +18,9 @@ alone does not create a snapshot.
 The shared function types are interface declarations, not executable stubs.
 Phase 2 implements `analyze` and `rankBraces` in `src/structures`. Phase 3 implements
 `commitPrediction` in `src/app/experiment/state.ts`. Phase 4 implements
-`compareQuotes` in `src/community/costs/engine`; the report port awaits Phase 5.
-Unimplemented ports do not return placeholder successes.
+`compareQuotes` in `src/community/costs/engine`. Phase 5 implements
+`buildDecisionSheet` in `src/community/report`; it throws descriptive errors for
+inconsistent typed inputs instead of returning an invalid successful payload.
 Object arguments make named units and
 source fields explicit. `CompareQuotes` packages the five positional arguments
 from the planning document into `QuoteInputs`. Commit receives validated results
@@ -129,9 +130,24 @@ because a number was entered. The report builder must check case association.
 
 `ReportInputs` explicitly provides trial, optional retest, selected quote inputs
 and results, readings and assumptions. `ReportPayload` adds schema version, report
-ID and supplied timestamp. The builder must check quote/result consistency and
-deep-copy/freeze every input so later navigation or edits cannot change the page.
-No global store access is permitted inside the print view.
+ID and supplied canonical ISO timestamp. The builder checks quote/result
+consistency by recomputing financial results; validates trial/retest associations,
+versions, analysis completeness, finite values and measurement case association;
+and deep-copies/freezes every input. It adds mandatory model/cost assumptions.
+Structural results are trusted internal solver snapshots and are not recalculated.
+This typed port is not a public JSON import/parser or independent solver audit.
+
+The app captures only with a selected stored trial and valid financial inputs;
+unknown amounts remain allowed. Invalid cost drafts block new capture. The existing
+`CostResult` union is retained for contract compatibility, but the Phase 5 builder
+rejects financial errors. Failed retests are explicitly omitted; valid retests are
+included only when requested and remain separate from the selected prediction.
+
+The print view receives only a frozen `ReportPayload` and never reads global state.
+Navigating, changing costs and selecting another trial do not change it. A new
+capture explicitly replaces the sheet. The JSON download preserves the full
+payload, including readings, all candidates and source precision. The optional
+measurement-entry UI and durable/imported reports remain outside this phase.
 
 ## Dependency rules
 

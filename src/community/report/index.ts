@@ -1,2 +1,2 @@
-/** Integration owns the Phase 5 immutable report builder and print view. */
+export { buildDecisionSheet, REPORT_ASSUMPTIONS } from './buildDecisionSheet';
 export type { BuildDecisionSheet, ReportInputs, ReportPayload } from '../../shared';

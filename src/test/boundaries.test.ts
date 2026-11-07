@@ -41,3 +41,12 @@ it('keeps financial forms and draft state independent of structural and experime
     expect(readFileSync(file, 'utf8')).not.toMatch(/from\s+['"][^'"]*(?:structures|studio|app\/)/);
   }
 });
+
+it('keeps report capture pure and report presentation independent of live application state', () => {
+  const builder = readFileSync(join(root, 'community/report/buildDecisionSheet.ts'), 'utf8');
+  expect(builder).not.toMatch(/from\s+['"][^'"]*(?:react|app\/|structures\/)/);
+  expect(builder).not.toMatch(/\b(?:window|document|rankBraces|analyze)\b/);
+  const view = readFileSync(join(root, 'community/report/DecisionSheet.tsx'), 'utf8');
+  expect(view).not.toMatch(/from\s+['"][^'"]*app\//);
+  expect(view).not.toMatch(/\b(?:useExperiment|useQuotes|useState|compareQuotes|rankBraces)\b/);
+});
