@@ -1,18 +1,52 @@
+
+import { useState } from 'react';
+
 import { useAppController } from './useAppController';
+import { DecisionSheet } from './DecisionSheet';
+import { CompareBuildOptions } from '../community/components/CompareBuildOptions';
+
+type AppView = 'compare' | 'decision';
 
 export function App() {
-  const { studio } = useAppController();
+  const { community, decisionSheet } = useAppController();
+
+  const [activeView, setActiveView] = useState<AppView>('compare');
+
   return (
     <main>
-      <h1>Where should we add one brace?</h1>
-      <p>Forma: a fixed tabletop bridge, one added brace, and your prediction.</p>
-      <section aria-labelledby="engine-title">
-        <h2 id="engine-title">Calculation engines ready</h2>
-        <p role="status">The judging interface is awaiting Claude’s presentation checkpoint.</p>
-        <p>Preset: {studio.preset.label} ({studio.preset.version}).</p>
-        <p>Four brace choices. Three load positions. Millimeters and newtons.</p>
-        <p>No prediction or physical measurement has been recorded.</p>
-      </section>
+      <header>
+        <h1>Forma</h1>
+        <p>
+          Compare community material packages and explore
+          their financial implications.
+        </p>
+      </header>
+
+      <nav aria-label="Main navigation">
+        <button
+          type="button"
+          aria-pressed={activeView === 'compare'}
+          onClick={() => setActiveView('compare')}
+        >
+          Compare build options
+        </button>
+
+        <button
+          type="button"
+          aria-pressed={activeView === 'decision'}
+          onClick={() => setActiveView('decision')}
+        >
+          Decision sheet
+        </button>
+      </nav>
+
+      <hr />
+
+      {activeView === 'compare' ? (
+        <CompareBuildOptions {...community} />
+      ) : (
+        <DecisionSheet {...decisionSheet} />
+      )}
     </main>
   );
 }
