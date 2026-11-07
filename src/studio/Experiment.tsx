@@ -34,6 +34,11 @@ export function Experiment({ baseline, load, panelId, results, error, trial, tri
     if (results && !previousResults.current && !inspectedTrialId) {
       const bounds = feedback.current?.getBoundingClientRect();
       if (window.innerWidth <= 740 && bounds && bounds.bottom > window.innerHeight) feedback.current?.scrollIntoView({ block: 'nearest' });
+      else if (window.innerWidth > 740) {
+        // Closing the first-use guide can leave the viewport above the scroll position.
+        const workspace = feedback.current?.closest<HTMLElement>('.workspace-grid');
+        if (workspace && workspace.getBoundingClientRect().top < 0) workspace.scrollIntoView({ block: 'start' });
+      }
     }
     previousResults.current = results;
   }, [results, inspectedTrialId]);

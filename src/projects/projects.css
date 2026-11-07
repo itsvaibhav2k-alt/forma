@@ -30,6 +30,24 @@
   .experiment-shell > .project-bar { margin:4px 0 0; padding:4px 12px; }
   .experiment-shell:has(.project-bar) main { padding-top:6px; }
   .experiment-shell:has(.project-bar) .page-heading { margin-bottom:8px; }
+  .experiment-shell:has(.project-bar) .bridge-svg, .experiment-shell:has(.project-bar) .model-view-svg { height:198px; }
+  .experiment-shell:has(.project-bar) .explainer { margin:0 0 12px; }
+  /* Keep the closed guide alongside the heading; an opened guide keeps its full reading area. */
+  .experiment-shell:has(.project-bar) main:has(> .explainer:not([open])) {
+    display:grid; grid-template-columns:minmax(0, 1fr) auto; column-gap:16px;
+  }
+  .experiment-shell:has(.project-bar) main:has(> .explainer:not([open])) > .page-heading {
+    grid-column:1; grid-row:1; min-width:0;
+  }
+  .experiment-shell:has(.project-bar) main:has(> .explainer:not([open])) > .explainer {
+    grid-column:2; grid-row:1; align-self:center; margin:0 0 8px; padding:0 12px;
+  }
+  .experiment-shell:has(.project-bar) main:has(> .explainer:not([open])) > .explainer summary {
+    min-height:44px; padding:8px 0; font-size:12px;
+  }
+  .experiment-shell:has(.project-bar) main:has(> .explainer:not([open])) > :not(.page-heading):not(.explainer) {
+    grid-column:1 / -1; min-width:0;
+  }
 }
 @media(max-width:740px) {
   .project-bar { padding:8px 12px; }
