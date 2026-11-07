@@ -20,7 +20,23 @@ GitHub repository's `main`. It preserves the local implementation without mergin
 the other agent's engines. Resolve the reviewed contract and preset differences
 before selectively integrating the two implementations.
 
-## Start after Phase 1 acceptance
+## Phase 2 handoff
+
+Phase 2 is implemented on the existing independent implementation branch. Its
+review boundaries are:
+
+| Subphase | Prerequisite | Deliverables | Verification |
+| --- | --- | --- | --- |
+| 2.1 | 1.3 | `preset.ts`, `validation.ts`, `errors.ts`, preset/validation tests | Canonical geometry and invalid input cases |
+| 2.2 | 2.1 | `analyze.ts`, `linear-system.ts`, solver tests, `src/test/structure-assertions.ts` | Triangle, mechanisms, force balance, numerical scaling, pivot exchange |
+| 2.3 | 2.2 | `rank-braces.ts`, matrix/ranking tests, structures exports, benchmark script, package command and documentation | 15 values, ties, independent additions, snapshot isolation, timing |
+
+No shared-contract or fixture changes were needed. Merge 2.1 before 2.2, then 2.3;
+the final `src/structures/index.ts` exports require all three. The new package
+script adds no dependencies. See [Phase 2 acceptance](phase-2.md) before wiring
+the engine into Phase 3. This does not reconcile or merge the other agent's main.
+
+## Independent work after Phase 1 acceptance
 
 | Next subphase | Prerequisite | Files owned | Merge evidence |
 | --- | --- | --- | --- |

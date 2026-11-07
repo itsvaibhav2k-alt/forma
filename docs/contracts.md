@@ -15,8 +15,10 @@ alone does not create a snapshot.
 | `CompareQuotes` | two packages, budget, horizon, rate | `Costs` or validation error | 4.1 |
 | `BuildDecisionSheet` | selected trial, optional retest, quotes/results/readings, report ID and time | `ReportPayload` | 5.1 |
 
-The exported function types are interface declarations, not executable stubs.
-They do not return placeholder successes. Object arguments make named units and
+The shared function types are interface declarations, not executable stubs.
+Phase 2 implements `analyze` and `rankBraces` in `src/structures`; the other ports
+await their implementation phases. They do not return placeholder successes.
+Object arguments make named units and
 source fields explicit. `CompareQuotes` packages the five positional arguments
 from the planning document into `QuoteInputs`. Commit receives validated results
 explicitly, keeping snapshot creation deterministic and independent of a solver.
@@ -32,11 +34,17 @@ explicitly, keeping snapshot creation deterministic and independent of a solver.
   absolute vertical magnitude. Map completeness is a runtime solver responsibility;
   `noUncheckedIndexedAccess` requires consumers to handle missing keys.
 - `AnalysisError` includes a code, useful message, and available affected IDs.
-  It has no numeric performance payload. Finite numbers, positive stock values,
-  valid endpoints, duplicates, zero lengths and singularity need Phase 2 checks.
+  It has no numeric performance payload. Phase 2 checks finite numbers, positive
+  stock values, endpoints, duplicates, zero lengths, singularity and numerical
+  residuals. See [the numerical policy](phase-2.md).
 - `RankedBraces` records its load, original design/analysis, all four independently
   modified designs/analyses and all tied best IDs. If any required solve fails,
   return an error for the scenario rather than a partial or stale ranking.
+- `rankBraces` accepts the unmodified canonical baseline and judging load only;
+  it allows array reordering, reversed member endpoints and a different design ID.
+  Geometry, restraints, stock, member IDs/topology and preset version must match.
+  General or edited trusses use `analyze`, which accepts finite single point loads.
+  A successful ranking is deeply cloned and frozen at runtime.
 - `DeflectionChange` distinguishes a percentage reduction from absolute-only
   change when the baseline is zero. Never sort on rounded display text.
 

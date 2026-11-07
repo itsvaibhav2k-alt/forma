@@ -1,9 +1,10 @@
 # Independent fixture data
 
-The fixture directory contains expected inputs and outputs for later development.
-It is not a solver, preset generator, or financial calculator. Tests presently
-check transcription, data shape, immutability and isolation. They do not establish
-that physics or financial calculations have been implemented or verified.
+The fixture directory contains independently transcribed expected inputs and
+outputs. It is not a solver, preset generator, or financial calculator. Phase 1
+checks transcription, data shape, immutability and isolation. Phase 2 tests the
+production structural engine against the triangle, invalid designs and all 15
+bridge values. Financial calculations remain unimplemented.
 
 ## Source material
 
@@ -39,7 +40,7 @@ All values below are downward loaded-joint displacement magnitudes in mm.
 | B2 | 0.069936 | 0.064819 | 0.062624 | 0.062624 | 0.064819 |
 | B3 | 0.043702 | 0.042423 | 0.042423 | 0.043227 | 0.032189 |
 
-Compare future engine output to these rounded values within **0.000001 mm**.
+Compare engine output to these rounded values within **0.000001 mm**.
 For the triangle, compare nonzero reference values within **1%**. Test zero and
 equilibrium values with an appropriate documented absolute tolerance. Full-precision
 engine values, not this rounded table, drive real ranking and gain calculations.
@@ -59,7 +60,7 @@ Full displacement vectors, reaction maps, and member forces are not supplied in
 the source for every candidate. The mock therefore leaves those maps empty and
 uses the solver version `fixture-summary-only-not-a-solver`. It does not fabricate
 zeros or forces. Do not use it for force overlays, a physical report, validation of
-map completeness, or a production fallback. Phase 2 must return complete maps.
+map completeness, or a production fallback. The Phase 2 engine returns complete maps.
 
 The production shell imports no fixture files. A source-boundary test prevents
 normal runtime imports, and fixtures are absent from the shared export barrel.

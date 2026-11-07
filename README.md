@@ -3,11 +3,13 @@
 A local browser workbench for a one-brace truss experiment, an independent package
 cost comparison, and a selected-trial decision sheet.
 
-**Phase 1 is the foundation.** This repository contains the decisions, shared
-contracts, independent fixtures, and a runnable React/TypeScript shell. The shell
-supports navigation; physics, prediction/retest, editable costs, and printing are
-explicitly unavailable until their implementation phases. It does not display
-fixture numbers as calculated results.
+**Phases 1 and 2 are implemented.** This repository contains the decisions, shared
+contracts, independent fixtures, React/TypeScript shell, and tested structural
+engine. The engine generates the bridge, validates inputs, solves 2D trusses and
+ranks the four independent brace additions. The shell still supports navigation
+only; live prediction/retest integration belongs to Phase 3, editable costs to
+Phase 4, and printing to Phase 5. It does not display fixture numbers as calculated
+results.
 
 ## Run locally
 
@@ -25,6 +27,7 @@ port is strict so a collision is reported rather than silently changing the URL.
 ```sh
 npm run check     # tests, strict TypeScript checking, production build
 npm run test:watch
+npm run bench:structures  # five-design calculation timing, no browser UI
 npm run build
 npm start        # serves dist at http://127.0.0.1:4173
 ```
@@ -41,6 +44,7 @@ session-only trials. No database, remote service, or account is required.
 - [Shared contracts](docs/contracts.md): module APIs and future reducer behavior.
 - [Fixture provenance](docs/fixtures.md): expected data, tolerances, and mock limitations.
 - [Phase 1 acceptance](docs/phase-1.md): what was delivered and how to verify it.
+- [Phase 2 acceptance and API](docs/phase-2.md): preset, solver, ranking, numerical policy and benchmark.
 - [Ownership and merge order](docs/merge-plan.md): the next independent work streams.
 - [Full phased plan](output/pdf/Forma_Phased_Build_and_Design_Review.pdf): the planning PDF.
 
@@ -64,10 +68,10 @@ The boundary tests protect that separation.
 
 ## Next work
 
-After accepting Phase 1, **2.1 (preset/validation), 3.1 (SVG and accessible
-controls), and 4.1 (cost functions)** can start independently. Keep one writer per
-module and put any shared-contract changes in a preceding integration-owned PR.
-No later-phase function currently returns a fake successful result.
+The next work is **Phase 3 (SVG, accessible controls, trial state and live solver
+integration)**. Phase 4.1 (cost functions) can proceed independently. Keep one
+writer per module and put any shared-contract changes in a preceding
+integration-owned PR. No later-phase function returns a fake successful result.
 
 The `feat/codex-phase-1` branch preserves this implementation as an independent
 snapshot in `itsvaibhav2k-alt/forma`. It does not share commit ancestry with that
