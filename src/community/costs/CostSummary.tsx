@@ -16,6 +16,7 @@ export function CostSummary({ inputs, costs }: { inputs: QuoteInputs; costs: Cos
   return <section className="cost-results" aria-labelledby="cost-results-heading">
     <div className="section-heading"><h2 id="cost-results-heading">Cash today. Cost over time.</h2><p>USD · {inputs.years} years · {(inputs.realRate * 100).toLocaleString('en-US', { maximumFractionDigits: 6 })}% real rate</p></div>
     <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">{summary}</p>
+    <p className="cost-reading">Upfront cost is the cash needed now. Funding gap is the part above your budget. Discounted total adds every year of upkeep in today’s dollars, so a cheaper-to-run package can win over time.</p>
     <div className="cost-summary-grid">{costs.packages.map((pkg, i) => <article key={pkg.packageId} className="workspace-card cost-summary-card" aria-label={`${inputs.packages[i]!.label} cost results`}>
       <div className="card-heading"><h3>{inputs.packages[i]!.label}</h3><span className="tag">Option {i === 0 ? 'A' : 'B'}</span></div>
       <dl><div><dt>Upfront cost</dt><dd><Amount value={pkg.upfront} /></dd></div><div><dt>Upfront funding gap</dt><dd><Amount value={pkg.fundingGap} />{pkg.fundingGap.status === 'known' && <span className="funding-status">{pkg.fundingGap.usd === 0 ? 'Fits the upfront budget' : 'Additional upfront funding needed'}</span>}</dd></div><div className="present-cost"><dt>Discounted total over {inputs.years} years</dt><dd><Amount value={pkg.presentCost} /></dd></div></dl>

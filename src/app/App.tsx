@@ -13,14 +13,15 @@ import { useMeasurements } from '../community/measurements/useMeasurements';
 import { MeasurementWorkbench } from '../community/measurements/MeasurementWorkbench';
 import { buildAssemblyPattern, type AssemblyPattern } from '../community/template/pattern';
 import { AssemblyTemplate } from '../community/template/AssemblyTemplate';
+import { Explainer } from './Explainer';
 
 type View = 'experiment' | 'costs' | 'report' | 'measurements' | 'template';
 const viewCopy: Record<View, readonly [string, string]> = {
-  experiment: ['Where should one extra brace go?', 'Choose where the load acts, predict which panel needs a brace, then put your intuition to the test.'],
-  costs: ['What will each option really cost?', 'Compare the cash needed today with upkeep over time, using two packages that provide the same service.'],
-  report: ['Your decision, captured.', 'Review the saved evidence, then print it or save it as a PDF.'],
-  measurements: ['What did the physical test show?', 'Keep observations tied to their design, load, measured joint and test conditions.'],
-  template: ['A pattern for one side.', 'Use the captured geometry at actual size, with a printer scale check before assembly.'],
+  experiment: ['Where should one extra brace go?', 'Forma is a tabletop experiment with one decision: you may add a single brace to a small truss bridge. Choose where the load acts, predict which panel needs the brace, then test your prediction against a simulated bridge.'],
+  costs: ['What will each option really cost?', 'A separate planning tool, independent of the bridge. Compare two build packages that deliver the same thing: the cash needed today and the total cost over the years.'],
+  report: ['Your decision, captured.', 'A frozen one-page record of your saved trial, the cost inputs and any measurements. Print it or save it as a PDF.'],
+  measurements: ['What did the physical test show?', 'Record what the physical model actually did, tied to its design, load, measured joint and test conditions.'],
+  template: ['A pattern for one side.', 'The captured geometry at actual size, with a printer scale check before assembly.'],
 };
 
 export function App({ ranker = rankBraces }: { ranker?: RankBraces } = {}) {
@@ -80,6 +81,7 @@ export function App({ ranker = rankBraces }: { ranker?: RankBraces } = {}) {
           <h1>{viewCopy[view][0]}</h1>
           <p className="intro">{viewCopy[view][1]}</p>
         </div>
+        <Explainer view={view} open={view === 'experiment' && experiment.state.trials.length === 0} />
 
         {view === 'experiment' ? <Experiment baseline={experiment.baseline} {...display}
           trials={experiment.state.trials} isRetest={!inspecting && experiment.state.retest.status !== 'idle'}

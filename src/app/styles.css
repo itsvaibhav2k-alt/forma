@@ -204,6 +204,21 @@ summary { cursor: pointer; font-weight: 550; }
 .analysis-error h2 { font-size: 17px; font-weight: 600; color: #873e29; }
 .analysis-error p { margin-top: 8px; font-size: 12px; }
 .analysis-error button { margin-top: 15px; }
+.explainer { border: 1px solid #d7ded1; border-radius: 10px; background: #fcfcf9; padding: 0 22px; margin: -14px 0 30px; }
+.explainer summary { padding: 15px 0; font-size: 14px; font-weight: 650; color: #203c32; list-style: none; display: flex; align-items: center; gap: 10px; }
+.explainer summary::before { content: ''; width: 7px; height: 7px; border-right: 2px solid #60705b; border-bottom: 2px solid #60705b; transform: rotate(-45deg); transition: transform 0.15s; }
+.explainer[open] summary::before { transform: rotate(45deg); }
+.explainer summary::-webkit-details-marker { display: none; }
+.explainer-body { padding: 0 0 18px; max-width: 900px; }
+.explainer-body p, .explainer-body li, .explainer-body dd { font-size: 14px; line-height: 1.65; color: #4c5b52; }
+.explainer-body ol { margin: 12px 0 0; padding-left: 22px; }
+.explainer-body li { margin: 6px 0; padding-left: 4px; }
+.explainer-body li::marker { color: #697d60; font-family: ui-monospace, monospace; font-size: 12px; }
+.explainer-body dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 28px; margin: 14px 0 0; }
+.explainer-body dt { font-size: 12px; font-weight: 650; color: #285d48; margin-bottom: 2px; }
+.explainer-body dd { margin: 0; }
+.explainer-limits { margin-top: 14px; padding: 10px 14px; border-left: 3px solid #ad864c; background: #f7f2e6; color: #5b4a2c; }
+.cost-reading { font-size: 13px; color: #65735d; line-height: 1.6; max-width: 760px; margin: 10px 0 0; }
 .model-view { margin: 0; padding: 14px 18px 6px; border-bottom: 1px solid #e4e7df; background: radial-gradient(ellipse at 50% 55%, #fffefa 10%, #f7f8f1 70%, #f1f3ec 100%); }
 .model-view-svg { display: block; width: 100%; max-width: 900px; height: auto; margin: 0 auto; user-select: none; }
 .model-view figcaption { font-size: 11px; color: #60705b; text-align: center; padding: 6px 0 8px; }
@@ -247,6 +262,8 @@ summary { cursor: pointer; font-weight: 550; }
   .deformation-legend { padding-left: 0; }
   .prediction-note { align-items: flex-start; }
   .hidden-badge { display: none; }
+  .explainer { padding: 0 16px; margin: -8px 0 22px; }
+  .explainer-body dl { grid-template-columns: 1fr; }
   .model-view { padding: 10px 8px 4px; }
   .verdict { padding: 18px 18px 0; }
   .result-metrics { padding: 20px 18px; gap: 18px 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
