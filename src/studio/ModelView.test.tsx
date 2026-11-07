@@ -16,7 +16,7 @@ it('adapts the app design without touching ids, members or supports', () => {
   expect(design.braceOptions.map(option => option.member.id)).toEqual(['brace-P1', 'brace-P2', 'brace-P3', 'brace-P4']);
 });
 
-it('keeps assembly read-only before and after reveal and follows the selected panel and load', () => {
+it('keeps assembly interactive before and after reveal and follows the selected panel and load', () => {
   const { container, rerender } = render(<ModelView baseline={baseline} loadNodeId="B1" panelId="P2" results={null} locked={false} />);
   expect(screen.getByRole('img', { name: /Load at B1/ })).toBeInTheDocument();
   expect(container.querySelector('[data-overlay]')).toBeNull();
@@ -25,8 +25,9 @@ it('keeps assembly read-only before and after reveal and follows the selected pa
   const results = rankBraces(baseline, { nodeId: 'B1', fxN: 0, fyN: -10 });
   if (results.status === 'error') throw new Error(results.message);
   rerender(<ModelView baseline={baseline} loadNodeId="B1" panelId="P2" results={results} locked />);
-  expect(screen.queryByRole('button')).toBeNull();
-  expect(screen.getByText(/Read-only assembly/)).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Fit' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Isolate' })).toBeVisible();
+  expect(screen.getByText(/Drag to orbit 360/)).toBeVisible();
   rerender(<ModelView baseline={baseline} loadNodeId="B3" panelId="P4" results={null} locked={false} />);
   expect(screen.getByRole('img', { name: /Load at B3, brace in P4/ })).toBeVisible();
   expect(screen.queryByRole('slider')).toBeNull();

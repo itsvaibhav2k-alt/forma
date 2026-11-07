@@ -10,6 +10,7 @@ afterEach(cleanup);
 it('preserves an unfinished P4/B3 draft through keyboard history inspection and return', async () => {
   const user = userEvent.setup(), ranker = vi.fn(rankBraces);
   render(<App ranker={ranker} />);
+  await user.click(screen.getByRole('button', { name: 'Structural' }));
   await user.click(screen.getByRole('radio', { name: 'P2' }));
   await user.click(screen.getByRole('button', { name: 'Commit prediction' }));
   await user.click(screen.getByRole('button', { name: 'Start another prediction' }));

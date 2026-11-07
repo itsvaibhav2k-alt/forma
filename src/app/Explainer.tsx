@@ -15,7 +15,7 @@ const COPY: Record<ExplainerView, Block> = {
       ['Deflection', 'How far the loaded joint moves down, in millimetres. Lower is better.'],
       ['Reduction', 'How much less the joint moves with that brace than with no brace at all.'],
       ['Rank', '1 of 4 is the best panel for that load. Ties share a rank.'],
-      ['Assembly and Structural', 'Two representations of the same selected load and brace. Structural supports direct editing in the drawing. Assembly is read-only; the controls beside it still work.'],
+      ['Assembly and Structural', 'Two representations of the same selected load and brace. Structural supports direct editing in the drawing. Assembly supports orbit, zoom, pan and part inspection; the controls beside it set the experiment.'],
     ],
     limits: 'This is a linear-elastic model of one side of the bridge with ideal pin joints. It predicts stiffness under this one load, not strength, and it is not a safety rating.',
   },

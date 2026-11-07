@@ -40,6 +40,7 @@ it('keeps overlay preferences separate from representation and clears all active
   const { container } = render(<App />);
   await user.click(screen.getByRole('radio', { name: 'P1' }));
   await user.click(screen.getByRole('button', { name: 'Commit prediction' }));
+  await user.click(screen.getByRole('button', { name: 'Structural' }));
   const detail = container.querySelector('.ranking-details');
   expect(detail).not.toHaveAttribute('open');
   await user.click(screen.getByText('Structural overlays and comparison'));

@@ -26,9 +26,11 @@ export interface BridgeCanvasProps {
   readOnly?: boolean;
   onLoadChange: (id: LoadNodeId) => void;
   onPanelChange: (id: PanelId) => void;
+  selectedMemberId?: string | null;
+  onSelectMember?: (id: string) => void;
 }
 
-export function BridgeCanvas({ baseline, loadNodeId, panelId, results, comparison, showDeformation, showForces, locked, readOnly = false, onLoadChange, onPanelChange }: BridgeCanvasProps) {
+export function BridgeCanvas({ baseline, loadNodeId, panelId, results, comparison, showDeformation, showForces, locked, readOnly = false, onLoadChange, onPanelChange, selectedMemberId, onSelectMember }: BridgeCanvasProps) {
   const titleId = useId();
   const descriptionId = useId();
   const svgRef = useRef<SVGSVGElement>(null);
@@ -63,11 +65,17 @@ export function BridgeCanvas({ baseline, loadNodeId, panelId, results, compariso
     const u2 = analysis?.displacementMmByNode[end.id];
     const force = (analysis ?? forceAnalysis)?.axialForceNByMember[member.id];
     const sign = showForces && force !== undefined ? Math.abs(force) < 1e-9 ? 'zero-force' : force > 0 ? 'tension' : 'compression' : '';
-    return <line key={member.id} data-member-id={member.id} className={`${className} ${analysis ? '' : sign}`}
+    return <g key={member.id} role={analysis ? undefined : "button"} tabIndex={analysis ? undefined : 0} aria-label={analysis ? undefined : `Inspect member ${member.id}`} aria-pressed={analysis ? undefined : selectedMemberId === member.id}
+      onClick={event => { if (!analysis) { event.stopPropagation(); onSelectMember?.(member.id); } }}
+      onKeyDown={event => { if (!analysis && ["Enter", " "].includes(event.key)) { event.preventDefault(); onSelectMember?.(member.id); } }}
+      style={{ cursor: analysis ? undefined : "pointer", pointerEvents: analysis ? "none" : undefined }}>
+      {!analysis && <path d={`M${screenX(start.xMm)},${screenY(start.yMm)} L${screenX(end.xMm)},${screenY(end.yMm)}`} stroke="transparent" strokeWidth="18" />}
+      <line data-member-id={member.id} className={`${className} ${analysis ? '' : sign} ${selectedMemberId === member.id ? 'selected-member' : ''}`}
+      style={!analysis && selectedMemberId === member.id ? { stroke: "#e17842", strokeWidth: 6 } : undefined}
       x1={screenX(start.xMm + (u1?.x ?? 0) * DEFORMATION_SCALE)} y1={screenY(start.yMm + (u1?.y ?? 0) * DEFORMATION_SCALE)}
       x2={screenX(end.xMm + (u2?.x ?? 0) * DEFORMATION_SCALE)} y2={screenY(end.yMm + (u2?.y ?? 0) * DEFORMATION_SCALE)}>
       <title>{member.id}: {start.id}–{end.id}{force !== undefined ? `; ${formatForce(force)}` : ''}</title>
-    </line>;
+    </line></g>;
   }
   return <div className="bridge-canvas">
     <svg ref={svgRef} className="bridge-svg" viewBox="0 0 680 310" aria-labelledby={`${titleId} ${descriptionId}`}>
@@ -87,6 +95,11 @@ export function BridgeCanvas({ baseline, loadNodeId, panelId, results, compariso
         <path d="M70 194 l-13 19 h26 Z M48 218 h44 M610 194 l-13 19 h26 Z M588 227 h44" />
         <circle cx="602" cy="219" r="4" /><circle cx="618" cy="219" r="4" />
       </g>
+      {forceAnalysis && <g className="support-reactions" aria-label="Support reactions">{Object.entries(forceAnalysis.reactionNByNode).map(([id, reaction]) => {
+        const node = nodes.get(id);
+        if (!node) return null;
+        return <g key={id}><path d={`M${screenX(node.xMm)} 272 V235 m-5 7 5 -7 5 7`} fill="none" stroke="#486953" strokeWidth="2" /><text x={screenX(node.xMm)} y="289" textAnchor="middle" fontSize="10" fill="#486953">Ry {reaction.y.toFixed(2)} N</text></g>;
+      })}</g>}
       {baseline.nodes.map(node => <g key={node.id} className="bridge-node" data-node-id={node.id}>
         <circle cx={screenX(node.xMm)} cy={screenY(node.yMm)} r="5" />
         <text x={screenX(node.xMm)} y={screenY(node.yMm) - 14} textAnchor="middle">{node.id}</text>

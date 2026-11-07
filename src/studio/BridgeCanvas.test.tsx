@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { bridgeFixture } from '../shared/fixtures/bridge';
 import { createBridgePreset, rankBraces } from '../structures';
@@ -43,4 +43,18 @@ it('magnifies original and chosen displacements by exactly the same factor, leav
     expect(Number(line.getAttribute('x2'))).toBeCloseTo(205 + 2.25 * 200 * analysis.displacementMmByNode.B1!.x, 12);
   }
   expect(container.querySelector('[data-node-id="B1"] circle')).toHaveAttribute('cy', '190');
+});
+
+
+it('selects the same member by pointer and keyboard and exposes live reactions', () => {
+  const onSelectMember = vi.fn();
+  const results = rankBraces(props.baseline, { nodeId: 'B1', fxN: 0, fyN: -10 });
+  if (results.status === 'error') throw new Error(results.message);
+  const { container } = render(<BridgeCanvas {...props} results={results} selectedMemberId="bottom-01" onSelectMember={onSelectMember} />);
+  const member = screen.getByRole('button', { name: 'Inspect member bottom-01' });
+  expect(member).toHaveAttribute('aria-pressed', 'true');
+  fireEvent.click(member);
+  fireEvent.keyDown(member, { key: 'Enter' });
+  expect(onSelectMember.mock.calls).toEqual([['bottom-01'], ['bottom-01']]);
+  expect(container.querySelector('.support-reactions')).toHaveTextContent('Ry 7.50 N');
 });

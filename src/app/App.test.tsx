@@ -14,6 +14,7 @@ describe('live experiment', () => {
     const user = userEvent.setup();
     const ranker = vi.fn(rankBraces);
     const { container } = render(<App ranker={ranker} />);
+    await user.click(screen.getByRole('button', { name: 'Structural' }));
     expect(screen.getByRole('button', { name: 'Commit prediction' })).toBeDisabled();
     expect(screen.getByRole('button', { name: /Decision sheet/ })).toBeDisabled();
     await user.click(screen.getByRole('radio', { name: 'P2' }));
@@ -31,6 +32,7 @@ describe('live experiment', () => {
   it('commits P2/B1 once, retests at B2 with ties, and restores the first result', async () => {
     const user = userEvent.setup();
     render(<App />);
+    await user.click(screen.getByRole('button', { name: 'Structural' }));
     await user.click(screen.getByRole('radio', { name: 'P2' }));
     await user.dblClick(screen.getByRole('button', { name: 'Commit prediction' }));
     expect(screen.getByRole('status')).toHaveTextContent('P2 ranks 4 of 4 at B1. Reduction 1.09%. Best: P1.');
@@ -54,6 +56,7 @@ describe('live experiment', () => {
   it('supports keyboard load and panel selection, commit and retest', async () => {
     const user = userEvent.setup();
     render(<App />);
+    await user.click(screen.getByRole('button', { name: 'Structural' }));
     screen.getByRole('slider', { name: 'Load position on bridge' }).focus();
     await user.keyboard('{End}{ArrowLeft}');
     expect(screen.getByRole('radio', { name: 'B2 Center' })).toBeChecked();
@@ -73,6 +76,7 @@ describe('live experiment', () => {
   it('hides new-round results, keeps multiple trials, and preserves them across navigation', async () => {
     const user = userEvent.setup();
     render(<App />);
+    await user.click(screen.getByRole('button', { name: 'Structural' }));
     await user.click(screen.getByRole('radio', { name: 'P2' }));
     await user.click(screen.getByRole('button', { name: 'Commit prediction' }));
     await user.click(screen.getByRole('button', { name: 'Start another prediction' }));
@@ -98,6 +102,7 @@ describe('live experiment', () => {
   it('uses one magnification for both overlays and offers signed forces beyond color', async () => {
     const user = userEvent.setup();
     const { container } = render(<App />);
+    await user.click(screen.getByRole('button', { name: 'Structural' }));
     await user.click(screen.getByRole('radio', { name: 'P1' }));
     await user.click(screen.getByRole('button', { name: 'Commit prediction' }));
     expect(screen.getByText('Displacements ×200 for both')).toBeVisible();
@@ -123,6 +128,7 @@ describe('live experiment', () => {
     const user = userEvent.setup();
     const ranker = vi.fn<RankBraces>().mockImplementationOnce(rankBraces).mockReturnValueOnce(failure).mockImplementation(rankBraces);
     const { container } = render(<App ranker={ranker} />);
+    await user.click(screen.getByRole('button', { name: 'Structural' }));
     await user.click(screen.getByRole('radio', { name: 'P2' }));
     await user.click(screen.getByRole('button', { name: 'Commit prediction' }));
     await user.click(screen.getByRole('radio', { name: 'B2 Center' }));
@@ -140,6 +146,7 @@ describe('live experiment', () => {
     const user = userEvent.setup();
     const ranker = vi.fn<RankBraces>().mockReturnValueOnce(failure).mockImplementation(rankBraces);
     render(<App ranker={ranker} />);
+    await user.click(screen.getByRole('button', { name: 'Structural' }));
     await user.click(screen.getByRole('radio', { name: 'P2' }));
     await user.click(screen.getByRole('button', { name: 'Commit prediction' }));
     expect(screen.getByRole('alert')).toBeVisible();

@@ -15,6 +15,7 @@ it('opens legacy evidence read-only, preserves its frozen sheet, and starts new 
   const originalReport = JSON.stringify(initial.report);
   render(<App initialWorkspace={initial} ranker={ranker} onWorkspaceChange={change} />);
   const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: 'Structural' }));
   expect(screen.getByRole('region', { name: 'Earlier solver result' })).toBeVisible();
   expect(screen.getByRole('radio', { name: 'B3 Right' })).toBeDisabled();
   expect(screen.getByRole('slider')).toHaveAttribute('aria-disabled', 'true');

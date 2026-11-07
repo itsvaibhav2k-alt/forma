@@ -2,9 +2,9 @@ import { useLayoutEffect, useRef, useState, type MouseEvent } from 'react';
 import { LOAD_NODE_IDS, PANEL_IDS, type AnalysisError, type Design, type Load, type LoadNodeId, type PanelId, type RankedBraces, type Trial } from '../shared';
 import { BridgeCanvas, DEFORMATION_SCALE } from './BridgeCanvas';
 import { ModelView } from './ModelView';
-import { formatChange, formatMm, panelRank } from './format';
+import { formatChange, formatForce, formatMm, panelRank } from './format';
 import { Results } from './Results';
-import { SOLVER_VERSION } from '../structures';
+import { createBraceMember, SOLVER_VERSION } from '../structures';
 
 interface ExperimentProps {
   baseline: Design;
@@ -26,7 +26,9 @@ interface ExperimentProps {
 }
 
 export function Experiment({ baseline, load, panelId, results, error, trial, trials, isRetest, projectStorage, inspectedTrialId, onReturn, onLoadChange, onPanelChange, onCommit, onStart, onSelectTrial }: ExperimentProps) {
-  const [representation, setRepresentation] = useState<'assembly' | 'structural'>('structural');
+  const [representation, setRepresentation] = useState<'assembly' | 'structural'>('assembly');
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [showReference, setShowReference] = useState(false);
   const feedback = useRef<HTMLDivElement>(null);
   const previousResults = useRef(results);
   useLayoutEffect(() => {
@@ -69,6 +71,15 @@ export function Experiment({ baseline, load, panelId, results, error, trial, tri
   }
   const locked = trial !== undefined;
   const trialNumber = trial ? trials.findIndex(item => item.id === trial.id) + 1 : null;
+  const inspectedDesign = panelId && results && comparison !== 'original' ? results.candidates[panelId].design : baseline;
+  const inspectedAnalysis = results ? comparison === 'original' || !panelId ? results.baseline.analysis : results.candidates[panelId].analysis : null;
+  const selectedMember = inspectedDesign.members.find(member => member.id === selectedMemberId) ?? (panelId && selectedMemberId === `brace-${panelId}` ? createBraceMember(panelId) : null);
+  const selectedStart = selectedMember && baseline.nodes.find(node => node.id === selectedMember.startNodeId);
+  const selectedEnd = selectedMember && baseline.nodes.find(node => node.id === selectedMember.endNodeId);
+  const memberLength = selectedStart && selectedEnd ? Math.hypot(selectedEnd.xMm - selectedStart.xMm, selectedEnd.yMm - selectedStart.yMm) : null;
+  const selectedForce = selectedMember ? inspectedAnalysis?.axialForceNByMember[selectedMember.id] : undefined;
+  const selectedStock = selectedMember && baseline.stocks.find(stock => stock.id === selectedMember.stockId);
+  const memberExtension = selectedStock && memberLength !== null && selectedForce !== undefined ? selectedForce * memberLength / (selectedStock.elasticModulusNPerMm2 * selectedStock.areaMm2) : null;
   const announcement = results && panelId
     ? `${inspecting ? `Inspecting saved trial ${trialNumber}` : isRetest ? 'Retest' : 'Prediction saved'}. ${panelId} ranks ${panelRank(results, panelId)} of 4 at ${load.nodeId}. Reduction ${formatChange(results.candidates[panelId].change)}. ${results.bestIds.length > 1 ? 'Tied best' : 'Best'}: ${results.bestIds.join(' and ')}.`
     : '';
@@ -83,10 +94,14 @@ export function Experiment({ baseline, load, panelId, results, error, trial, tri
         <div className="representation-controls" role="group" aria-label="Bridge representation">
           <span className="sr-only">Representation</span>{(['assembly', 'structural'] as const).map(value => <button key={value} type="button" aria-pressed={representation === value} onClick={() => setRepresentation(value)}>{value === 'assembly' ? 'Assembly' : 'Structural'}</button>)}
         </div></div>
-        {representation === 'assembly' ? <ModelView baseline={baseline} loadNodeId={load.nodeId} panelId={panelId} results={results} locked={locked} /> : <>
+        {representation === 'assembly' ? <ModelView baseline={baseline} loadNodeId={load.nodeId} panelId={panelId} results={results} locked={locked} selectedMemberId={selectedMemberId} onSelectMember={setSelectedMemberId} /> : <>
+        <div className={showReference ? "structural-split" : "structural-stage"}>
         <BridgeCanvas baseline={baseline} loadNodeId={load.nodeId} panelId={panelId} results={results}
           comparison={results ? comparison : 'both'} showDeformation={Boolean(results) && showDeformation} showForces={Boolean(results) && showForces}
-          locked={locked} readOnly={readOnly} onLoadChange={onLoadChange} onPanelChange={onPanelChange} />
+          locked={locked} readOnly={readOnly} onLoadChange={onLoadChange} onPanelChange={onPanelChange} selectedMemberId={selectedMemberId} onSelectMember={setSelectedMemberId} />
+        {showReference && <section className="reference-assembly" aria-label="Reference assembly"><ModelView baseline={baseline} loadNodeId={load.nodeId} panelId={panelId} results={results} locked={locked} selectedMemberId={selectedMemberId} onSelectMember={setSelectedMemberId} /></section>}
+        </div>
+        <label className="reference-toggle"><input type="checkbox" checked={showReference} onChange={event => setShowReference(event.target.checked)} /> Reference assembly</label>
         <div className="bridge-legend"><span><i className="legend-line baseline" />Original members</span><span><i className="legend-line brace" />{locked ? 'Your brace' : 'Brace preview'}</span><span>B0 pin · B4 roller</span></div>
         {results && <details className="view-controls"><summary>Structural overlays and comparison</summary>
           <fieldset className="segmented-control"><legend>Compare designs</legend>{(['both', 'original', 'modified'] as const).map(value => <label key={value}><input type="radio" name="comparison" checked={comparison === value} onChange={() => setComparison(value)} /><span>{value === 'both' ? 'Both' : value === 'original' ? 'Original' : 'With brace'}</span></label>)}</fieldset>
@@ -99,6 +114,13 @@ export function Experiment({ baseline, load, panelId, results, error, trial, tri
 
       </div>
       <aside className="sequence-card" aria-labelledby="controls-heading">
+        <section className="member-inspector" aria-label="Member inspector">
+          <p className="eyebrow">{representation === 'assembly' ? 'ASSEMBLY INSPECTOR' : 'STRUCTURAL INSPECTOR'}</p>
+          <h3>{selectedMember ? `${selectedMember.startNodeId}–${selectedMember.endNodeId}` : 'Select a member'}</h3>
+          {selectedMember ? <><p>{selectedMember.id} · {selectedMember.id.startsWith('brace-') ? 'Added brace' : 'Front truss member'}</p><dl className="inspector-measurements"><div><dt>Length</dt><dd>{memberLength?.toFixed(2)} mm</dd></div><div><dt>Axial force</dt><dd>{selectedForce === undefined ? 'Commit to reveal' : formatForce(selectedForce)}</dd></div><div><dt>Extension</dt><dd>{memberExtension === null ? 'Commit to reveal' : `${memberExtension >= 0 ? '+' : '−'}${Math.abs(memberExtension).toFixed(6)} mm`}</dd></div></dl></> : <p>Click a bar to inspect its geometry and live analysis. Selection follows the reference assembly.</p>}
+          {inspectedAnalysis && <details><summary>Support reactions</summary><dl className="inspector-measurements">{Object.entries(inspectedAnalysis.reactionNByNode).map(([id, reaction]) => <div key={id}><dt>{id} · Rx / Ry</dt><dd>{reaction.x.toFixed(3)} / {reaction.y.toFixed(3)} N</dd></div>)}</dl></details>}
+          <p className="inspector-note">Illustrative hardware is separate from the analyzed front truss.</p>
+        </section>
         <p className="eyebrow">{readOnly ? 'SAVED RESULT' : locked ? 'CHALLENGE YOUR CHOICE' : 'THE EXPERIMENT'}</p>
         <h2 id="controls-heading">{readOnly ? 'Saved result. Read-only.' : locked ? 'Same brace. A different load.' : 'One brace. Your call.'}</h2>
         <fieldset className="choice-fieldset" disabled={readOnly}><legend><span>01</span> Position the load</legend>

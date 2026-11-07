@@ -69,7 +69,7 @@ export function App({ ranker = rankBraces, initialWorkspace, onWorkspaceChange, 
       <header className="site-header">
         <a className="wordmark" href="/" aria-label="Forma home">
           <img src="/forma.svg" width="36" height="36" alt="" />
-          <span>forma<span className="wordmark-period">.</span></span>
+          <span>Forma<span className="studio-wordmark">Studio</span></span>
         </a>
         <nav className="navigation" aria-label="Workbench views">
           <button type="button" aria-current={view === 'experiment' ? 'page' : undefined} onClick={() => setView('experiment')}>Experiment</button>
@@ -89,7 +89,7 @@ export function App({ ranker = rankBraces, initialWorkspace, onWorkspaceChange, 
           <h1>{viewCopy[view][0]}</h1>
           <p className="intro">{viewCopy[view][1]}</p>
         </div>
-        <Explainer view={view} open={view === 'experiment' && experiment.state.trials.length === 0} />
+        <Explainer view={view} open={false} />
 
         {view === 'experiment' ? <Experiment baseline={experiment.baseline} {...display} projectStorage={!!onWorkspaceChange}
           trials={experiment.state.trials} isRetest={!inspecting && experiment.state.retest.status !== 'idle'}

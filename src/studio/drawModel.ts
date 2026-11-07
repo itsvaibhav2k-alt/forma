@@ -21,6 +21,9 @@ export interface DrawOptions {
   width: number;
   height: number;
   deformationScale: number;
+  selectedMemberId?: string | null;
+  deckLift?: number;
+  jointDetail?: boolean;
   original?: AnalysisSuccess;
   modified?: AnalysisSuccess;
 }
@@ -44,6 +47,7 @@ interface Scene {
   readonly isSide: boolean;
 }
 interface Beam {
+  readonly memberId: string;
   readonly a: Pt; readonly b: Pt; readonly layer: number; readonly thick: number;
   readonly force: number | undefined;
 }
@@ -53,9 +57,9 @@ const SAFE_ID = /^[A-Za-z0-9-]+$/;
 const PURPLE = '#2761d3';
 // ponytail: deck/abutment presentation geometry is fixed to the judge span like the prototype
 const ABUTMENT_XS = [0, 240] as const;
-const SLATS = ['#a4afc2', '#bbc5d4', '#b0bcce', '#c2cad8', '#aebacc'] as const;
+const SLATS = ['#acb4b3', '#bcc4c1', '#b0bab6', '#c7ccc6', '#aeb8b5'] as const;
 const PALETTE = {
-  rear: ['#8a98b1', '#bcc8dd', '#53617b', '#37445e', '#c7d3e9'],
+  rear: ['#7e888b', '#b7bfc0', '#535f63', '#39464b', '#cbd0ce'],
   tension: ['#77d5d4', '#c7fffa', '#3a8e99', '#255b63', '#dbffff'],
   compression: ['#f29d78', '#ffe0ba', '#c26e53', '#8f503e', '#ffebcf'],
   neutral: ['#8d98a9', '#adb7c6', '#596679', '#3d495f', '#bec8d6'],
@@ -77,11 +81,11 @@ function makeScene(
   view: ViewMode, orbit: number, width: number, height: number, drop = 0,
 ): Scene {
   const isSide = view === 'side';
-  const azimuth = (22 + Math.max(-16, Math.min(16, orbit))) * Math.PI / 180;
+  const azimuth = (22 + orbit) * Math.PI / 180;
   const ca = Math.cos(azimuth); const sa = Math.sin(azimuth); const elev = 0.47;
   const proj = (x: number, y: number, z: number): Pt => isSide ? [x, -y]
     : [x * ca - z * sa, -x * sa * Math.sin(elev) - y * Math.cos(elev) - z * ca * Math.sin(elev)];
-  const extent = isSide ? 267 : 263 * ca + (DEPTH + 10) * sa;
+  const extent = isSide ? 267 : Math.max(160, 263 * Math.abs(ca) + (DEPTH + 10) * Math.abs(sa));
   const s = Math.min(
     (width - Math.max(28, width * 0.10)) / extent,
     (height - 58) / ((isSide ? 109 : 125) + drop),
@@ -99,11 +103,11 @@ function makeScene(
 
 function defs({ id, s }: Scene): string {
   return `<defs><linearGradient id="${id}front" x1="0" y1="1" x2=".9" y2="0" `
-    + 'gradientUnits="objectBoundingBox"><stop stop-color="#8896af"/>'
-    + '<stop offset=".38" stop-color="#b1bed2"/><stop offset=".72" stop-color="#dae2ed"/>'
-    + `<stop offset="1" stop-color="#adbad0"/></linearGradient><linearGradient id="${id}purple" `
-    + 'x2=".85" y2="1"><stop stop-color="#bbdcff"/><stop offset=".34" stop-color="#438bff"/>'
-    + `<stop offset="1" stop-color="#2a57dc"/></linearGradient><linearGradient id="${id}concrete" `
+    + 'gradientUnits="objectBoundingBox"><stop stop-color="#78868c"/>'
+    + '<stop offset=".38" stop-color="#a4b0b4"/><stop offset=".72" stop-color="#d8dfdc"/>'
+    + `<stop offset="1" stop-color="#9ca8aa"/></linearGradient><linearGradient id="${id}purple" `
+    + 'x2=".85" y2="1"><stop stop-color="#e7d3a3"/><stop offset=".34" stop-color="#b69452"/>'
+    + `<stop offset="1" stop-color="#8d6a2d"/></linearGradient><linearGradient id="${id}concrete" `
     + 'x1="0" y1="0" x2=".9" y2="1"><stop stop-color="#e4dfd7"/>'
     + `<stop offset="1" stop-color="#ada9aa"/></linearGradient><filter id="${id}soft" x="-30%" `
     + `width="160%" y="-90%" height="280%"><feGaussianBlur stdDeviation="${
@@ -143,16 +147,18 @@ function abutments(scene: Scene): string {
   return out;
 }
 
-function deck(scene: Scene): string {
+function deck(scene: Scene, lift = 0): string {
+  const sceneP = scene.P;
+  scene = { ...scene, P: (x, y, z) => sceneP(x, y + lift, z) };
   let out = '';
   for (let i = 0; i < 5; i += 1) {
     const x = i * 60;
-    out += box(scene, x - 0.9, x + 0.9, -0.8, 0.65, 0.3, DEPTH, ['#727f98', '#c2cddc', '#8491a8']);
+    out += box(scene, x - 0.9, x + 0.9, -0.8, 0.65, 0.3, DEPTH, ['#74817f', '#c2ccc6', '#85918b']);
   }
   for (let j = 0; j < 40; j += 1) {
     const x = j * 6;
     const top = SLATS[(j * 3 + Math.floor(j / 5)) % SLATS.length] ?? SLATS[0];
-    out += box(scene, x + 0.1, x + 5.85, -0.2, 1.1, 1.65, DEPTH - 1.1, ['#737e93', top, '#778298']);
+    out += box(scene, x + 0.1, x + 5.85, -0.2, 1.1, 1.65, DEPTH - 1.1, ['#75817a', top, '#7b877e']);
   }
   return out;
 }
@@ -232,7 +238,13 @@ export function drawModel(options: DrawOptions): DrawResult {
   const drop = magnify ? Math.max(0, ...design.nodes.flatMap((n) => results.map(
     (r) => -(n.y + (r?.displacementsMm[n.id]?.y ?? 0) * magnify),
   ))) : 0;
-  const scene = makeScene(options.view, options.orbit, width, height, drop);
+  let scene = makeScene(options.view, options.orbit, width, height, drop);
+  const selectedBrace = design.braceOptions.find(option => option.panelId === (options.committedPanelId ?? options.previewPanelId));
+  const jointNode = design.nodes.find(n => n.id === selectedBrace?.member.startNodeId) ?? design.nodes[0];
+  if (options.jointDetail && jointNode) {
+    const originalP = scene.P; const focus = originalP(jointNode.x, jointNode.y, 0);
+    scene = { ...scene, P: (x, y, z) => { const p = originalP(x, y, z); return [p[0] - focus[0] + width / 2, p[1] - focus[1] + height / 2]; } };
+  }
   const { P, s, isSide, id } = scene;
   const nodes = new Map<NodeId, TrussNode>(design.nodes.map((node) => [node.id, node]));
   const node = (nodeId: NodeId): TrussNode => {
@@ -250,7 +262,7 @@ export function drawModel(options: DrawOptions): DrawResult {
     const start = node(m.startNodeId); const end = node(m.endNodeId);
     const vertical = start.x === end.x; const chord = start.y === end.y;
     return {
-      a: at(m.startNodeId), b: at(m.endNodeId),
+      memberId: m.id, a: at(m.startNodeId), b: at(m.endNodeId),
       layer: chord ? 2 : vertical ? 1 : 0, thick: vertical ? 2.2 : chord ? 3.05 : 2.3,
       force: forces?.[m.id],
     };
@@ -260,8 +272,8 @@ export function drawModel(options: DrawOptions): DrawResult {
   const candidates = design.braceOptions.map((option) =>
     [at(option.member.startNodeId), at(option.member.endNodeId)] as const);
   const materials = {
-    front: [`url(#${id}front)`, '#e1e7f3', '#64718a', '#435069', '#f5f7fc'] as Palette,
-    selected: [`url(#${id}purple)`, '#9bc9ff', '#254db9', '#1f429a', '#e5f2ff'] as Palette,
+    front: [`url(#${id}front)`, '#e3e7e3', '#657176', '#414e54', '#f5f7f2'] as Palette,
+    selected: [`url(#${id}purple)`, '#e6cb8f', '#97752f', '#735626', '#fff0cb'] as Palette,
   };
 
   const frame = (z: number, near: boolean): string => {
@@ -269,18 +281,18 @@ export function drawModel(options: DrawOptions): DrawResult {
     for (const b of beams) {
       const material = near && forces ? forcePalette(b.force)
         : near ? materials.front : PALETTE.rear;
-      out += beam(scene, b.a, b.b, z, b.thick, material);
+      out += `<g data-member="${b.memberId}"${options.selectedMemberId === b.memberId ? ' style="filter:drop-shadow(0 0 3px #d49a35)"' : ''}>${beam(scene, b.a, b.b, z, b.thick, material)}</g>`;
     }
     const brace = design.braceOptions[pick]; const pair = candidates[pick];
     if (near && brace && pair) {
       const material = forces ? forcePalette(forces[brace.member.id]) : materials.selected;
-      out += beam(scene, pair[0], pair[1], z - 0.1, 2.65, material);
+      out += `<g data-part="brace" data-member="${brace.member.id}">${beam(scene, pair[0], pair[1], z - 0.1, 2.65, material)}</g>`;
     }
     return near ? out + hardware(scene, design.nodes.map((n) => at(n.id)), z - 0.19) : out;
   };
 
-  let out = defs(scene) + abutments(scene);
-  if (!isSide) out += frame(DEPTH, false) + deck(scene);
+  let out = defs(scene) + `<g data-part="supports">${abutments(scene)}</g>`;
+  if (!isSide) out += `<g data-part="rear">${frame(DEPTH, false)}</g><g data-part="deck">${deck(scene, options.deckLift ?? 0)}</g>`;
   if (magnify) {
     const overlay = options.original ?? options.modified;
     for (const m of design.members) {
@@ -291,7 +303,20 @@ export function drawModel(options: DrawOptions): DrawResult {
         'opacity=".74" stroke-dasharray="3.5 4"');
     }
   }
-  out += frame(0, true);
+  out += `<g data-part="front">${frame(0, true)}</g>`;
+  if (options.jointDetail && jointNode) {
+    const x = jointNode.x; const y = jointNode.y;
+    out += '<g data-part="brace">';
+    out += line(P(x, y, -3), P(x, y, -30), '#a7aeb2', .65, 'stroke-dasharray="2 2"');
+    out += box(scene, x - 3, x + 3, y - 3, y + 3, -9, -7, ['#aeb7bc', '#e3e8e7', '#6f7d84']);
+    for (const z of [-13, -19]) {
+      out += circ(P(x, y, z), s * 2.3, '#c6ab75', 'stroke="#877049" stroke-width=".6"');
+      out += circ(P(x, y, z), s * .9, '#69747a');
+    }
+    out += line(P(x, y, -21), P(x, y, -30), '#9ea9ae', s * 1.4);
+    out += circ(P(x, y, -30), s * 2.3, '#d6ba83', 'stroke="#826c43" stroke-width=".6"');
+    out += '</g>';
+  }
   if (!locked) {
     candidates.forEach(([a, b], i) => {
       if (i === pick) return;
