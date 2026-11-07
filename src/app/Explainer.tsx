@@ -48,10 +48,9 @@ export function Explainer({ view, open }: { view: ExplainerView; open: boolean }
   return <details className="explainer" open={open || undefined} key={view}>
     <summary>How this works</summary>
     <div className="explainer-body">
-      <p>{copy.lead}</p>
-      {copy.steps && <ol>{copy.steps.map((step, index) => <li key={index}>{step}</li>)}</ol>}
-      {copy.terms && <dl>{copy.terms.map(([term, text]) => <div key={term}><dt>{term}</dt><dd>{text}</dd></div>)}</dl>}
-      {copy.limits && <p className="explainer-limits">{copy.limits}</p>}
+      <div className="explainer-lead"><h3>What it is</h3><p>{copy.lead}</p>{copy.limits && <p className="explainer-limits">{copy.limits}</p>}</div>
+      {copy.steps && <div><h3>The steps</h3><ol>{copy.steps.map((step, index) => <li key={index}><span aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>{step}</li>)}</ol></div>}
+      {copy.terms && <div><h3>Reading the numbers</h3><dl>{copy.terms.map(([term, text]) => <div key={term}><dt>{term}</dt><dd>{text}</dd></div>)}</dl></div>}
     </div>
   </details>;
 }
