@@ -24,7 +24,7 @@ export interface CommunityState {
   readonly readings: readonly Reading[];
 }
 
-/** Event contracts only. The reducer and analysis orchestration belong to Phase 3.2/3.3. */
+/** Integration implements these transitions in src/app/experiment. */
 export type ExperimentEvent =
   | { readonly type: 'round/start'; readonly roundId: string; readonly load: Load }
   | { readonly type: 'prediction/select-panel'; readonly panelId: PanelId }

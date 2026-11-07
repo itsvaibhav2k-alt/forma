@@ -1,11 +1,16 @@
 import { useState } from 'react';
-import { FIXED_LOAD_FY_N, LOAD_NODE_IDS, PRESET_DEFAULTS } from '../shared';
+import type { RankBraces } from '../shared';
+import { rankBraces } from '../structures';
+import { Experiment } from '../studio';
+import { experimentDisplay } from './experiment/state';
+import { useExperiment } from './experiment/useExperiment';
 
 type View = 'experiment' | 'costs';
 
-export function App() {
-  // Shell navigation only. Experiment state and commit/retest behavior arrive in Phase 3.
+export function App({ ranker = rankBraces }: { ranker?: RankBraces } = {}) {
   const [view, setView] = useState<View>('experiment');
+  const experiment = useExperiment(ranker);
+  const display = experimentDisplay(experiment.state);
 
   return (
     <div className="app-shell">
@@ -19,7 +24,7 @@ export function App() {
           <button type="button" aria-current={view === 'experiment' ? 'page' : undefined} onClick={() => setView('experiment')}>Experiment</button>
           <button type="button" aria-current={view === 'costs' ? 'page' : undefined} onClick={() => setView('costs')}>Compare build options</button>
         </nav>
-        <span className="preview-label"><span aria-hidden="true" />Foundation preview</span>
+        <span className="preview-label"><span aria-hidden="true" />Interactive experiment</span>
       </header>
 
       <main id="workspace" tabIndex={-1}>
@@ -31,7 +36,11 @@ export function App() {
             : 'Compare the cash needed today with upkeep over time, using two packages that provide the same service.'}</p>
         </div>
 
-        {view === 'experiment' ? <ExperimentPlaceholder /> : <CostsPlaceholder />}
+        {view === 'experiment' ? <Experiment baseline={experiment.baseline} {...display}
+          trials={experiment.state.trials} isRetest={experiment.state.retest.status !== 'idle'}
+          onLoadChange={experiment.moveLoad} onPanelChange={panelId => experiment.dispatch({ type: 'prediction/select-panel', panelId })}
+          onCommit={experiment.commit} onStart={experiment.startRound}
+          onSelectTrial={trialId => experiment.dispatch({ type: 'trial/select', trialId })} /> : <CostsPlaceholder />}
 
         <section className="report-strip" aria-labelledby="report-heading">
           <div>
@@ -45,45 +54,9 @@ export function App() {
 
       <footer className="site-footer">
         <span>Forma / NOVA 2026</span>
-        <span>Foundation only. No analysis or cost calculations are active yet.</span>
+        <span>Ideal truss model · Session-only trials · Cost comparison coming next</span>
       </footer>
     </div>
-  );
-}
-
-function ExperimentPlaceholder() {
-  return (
-    <section className="workspace-grid" aria-label="Bridge experiment">
-      <div className="workspace-card">
-        <div className="card-heading"><h2>Bridge workspace</h2><span className="tag">Fixed preset</span></div>
-        <div className="empty-canvas">
-          <span className="canvas-cross top-left" aria-hidden="true">+</span>
-          <span className="canvas-cross bottom-right" aria-hidden="true">+</span>
-          <div className="empty-content">
-            <span className="step-number" aria-hidden="true">01</span>
-            <h3>Your experiment starts here</h3>
-            <p>The interactive bridge and validated analysis are coming next. No predicted result is available in this preview.</p>
-          </div>
-        </div>
-        <dl className="preset-facts">
-          <div><dt>Panels</dt><dd>{PRESET_DEFAULTS.bayCount}</dd></div>
-          <div><dt>Load positions</dt><dd>{LOAD_NODE_IDS.length}</dd></div>
-          <div><dt>Downward load</dt><dd>{Math.abs(FIXED_LOAD_FY_N)} <span>N</span></dd></div>
-          <div><dt>Brace allowance</dt><dd>1</dd></div>
-        </dl>
-      </div>
-      <aside className="sequence-card" aria-labelledby="sequence-heading">
-        <p className="eyebrow">THE EXPERIMENT</p>
-        <h2 id="sequence-heading">Predict. Test. Challenge.</h2>
-        <ol className="sequence">
-          <li><span>01</span><div><h3>Position the load</h3><p>Choose one of three interior deck joints.</p></div></li>
-          <li><span>02</span><div><h3>Choose your brace</h3><p>Pick one panel before seeing the ranking.</p></div></li>
-          <li><span>03</span><div><h3>Challenge the result</h3><p>Keep your brace and move the load to another joint.</p></div></li>
-        </ol>
-        <button className="primary-button" disabled type="button">Commit prediction</button>
-        <p className="availability">Available when the experiment is connected.</p>
-      </aside>
-    </section>
   );
 }
 

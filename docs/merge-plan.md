@@ -48,6 +48,23 @@ These three can proceed in parallel once people are assigned. The shell remains
 integration-owned; expose module components/functions first, then let integration
 wire them into the app. A fixture is a test input, not the Phase 2 preset generator.
 
+## Phase 3 handoff
+
+Phase 3 is implemented on `phases`, the renamed independent implementation branch.
+The other agent's main has not been merged. The review order is:
+
+| Subphase | Prerequisite | Deliverables | Evidence |
+| --- | --- | --- | --- |
+| 3.1 | 1.3; 2.1 for production geometry | `BridgeCanvas.tsx`, SVG tests, native panel/load controls and styles | Fixture geometry, snapping boundaries, keyboard and pointer selection |
+| 3.2 | 3.1 | `src/app/experiment/state.ts`, reducer tests, saved-trial/history views | Idempotent commit, frozen snapshots, stale-event rejection, restoration and failure isolation |
+| 3.3 | 2.3 + 3.2 | `useExperiment.ts`, app wiring, result/overlay views and integration tests | B1/P2 → B2 tie → original restore; common 200× scale; explicit errors |
+
+The live solver was already available, so no temporary mock runtime was needed.
+Shared event/type shapes and solver fixtures are unchanged. The shared state file
+only updates its ownership comment. No dependency or lockfile change is needed.
+`src/studio/index.ts` and the app wiring require the completed 3.1–3.3 components.
+See [Phase 3 acceptance](phase-3.md) for verification and remaining release gates.
+
 ## Later integration order
 
 1. 2.1 → 2.2 solver → 2.3 ranking.

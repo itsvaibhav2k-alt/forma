@@ -16,8 +16,9 @@ alone does not create a snapshot.
 | `BuildDecisionSheet` | selected trial, optional retest, quotes/results/readings, report ID and time | `ReportPayload` | 5.1 |
 
 The shared function types are interface declarations, not executable stubs.
-Phase 2 implements `analyze` and `rankBraces` in `src/structures`; the other ports
-await their implementation phases. They do not return placeholder successes.
+Phase 2 implements `analyze` and `rankBraces` in `src/structures`. Phase 3 implements
+`commitPrediction` in `src/app/experiment/state.ts`; cost and report ports await
+their implementation phases. They do not return placeholder successes.
 Object arguments make named units and
 source fields explicit. `CompareQuotes` packages the five positional arguments
 from the planning document into `QuoteInputs`. Commit receives validated results
@@ -51,8 +52,8 @@ explicitly, keeping snapshot creation deterministic and independent of a solver.
 ## Trial and retest invariants
 
 A `Trial` stores trial/round IDs, preset and solver versions, load, chosen panel,
-and a deep snapshot of the entire ranking, including designs. The future commit
-adapter must verify that result load and preset/solver versions match the active
+and a deep snapshot of the entire ranking, including designs. The commit
+adapter verifies that result load and preset/solver versions match the active
 round. Accepting arbitrary externally supplied results is not part of the UI.
 
 A `Retest` identifies its source trial, new load, retained chosen panel and new
@@ -77,8 +78,19 @@ and callbacks, never a competing trial store. Financial inputs/readings live in
 
 The revealed round contains a trial ID, while the predicting round has no result
 field. This prevents a hidden state from accidentally carrying a result view.
-The synchronous app adapter will call the solver and dispatch retest events after
-post-commit load movement. The reducer is intentionally not implemented in Phase 1.
+The synchronous app adapter calls the solver and dispatches retest events after
+post-commit load movement. The reducer, commit adapter and display selector are in
+`src/app/experiment/state.ts`; `useExperiment.ts` owns live solver calls. Selecting
+a stored trial uses its existing snapshot without solving again. The display
+selector returns no active results for an error state. The separately labeled
+saved original can remain visible during a failed retest.
+
+The app retains this state across navigation. Studio owns only presentation
+preferences (which overlay is shown and whether force colors are enabled), never
+a competing trial store. Reload clears all trials. Events are internal typed
+messages, not an untrusted network/import format. If the synchronous adapter is
+later made asynchronous, add request identities to retest failures before allowing
+out-of-order completions; that is outside this implementation.
 
 ## Financial outputs and unknowns
 

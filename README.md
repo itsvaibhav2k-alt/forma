@@ -3,13 +3,13 @@
 A local browser workbench for a one-brace truss experiment, an independent package
 cost comparison, and a selected-trial decision sheet.
 
-**Phases 1 and 2 are implemented.** This repository contains the decisions, shared
-contracts, independent fixtures, React/TypeScript shell, and tested structural
-engine. The engine generates the bridge, validates inputs, solves 2D trusses and
-ranks the four independent brace additions. The shell still supports navigation
-only; live prediction/retest integration belongs to Phase 3, editable costs to
-Phase 4, and printing to Phase 5. It does not display fixture numbers as calculated
-results.
+**Phases 1–3 are implemented.** Choose a load position and brace, commit your
+prediction, then compare all four placements using the tested structural engine.
+Drag the load or use the keyboard to retest the same brace. Saved trials preserve
+their original results for the session. The bridge shows original/modified
+deformation at one magnification and offers signed force and reaction tables.
+Editable costs belong to Phase 4 and printing to Phase 5. No fixture numbers are
+used as calculated results.
 
 ## Run locally
 
@@ -33,10 +33,22 @@ npm start        # serves dist at http://127.0.0.1:4173
 ```
 
 The production build uses local assets and system fonts. Once dependencies are
-installed and `dist` is built, the local server can serve the shell without an
-internet connection. This is not yet verification of the full offline judging
-flow; that release gate belongs to Phase 6. Reloading the eventual app clears
-session-only trials. No database, remote service, or account is required.
+installed and `dist` is built, the local server can serve the experiment without
+an internet connection. The full offline judging/printing release gate belongs to
+Phase 6. Reloading clears session-only trials. No database, remote service, or
+account is required.
+
+## Try the experiment
+
+1. Leave the load at **B1** and select **P2**. Commit: its reduction is **1.09%**.
+2. Move the load to **B2**. The retained P2 brace now ties with P3 at **10.46%**.
+3. Choose **Show saved result** to restore B1/P2 unchanged.
+4. Start another prediction to choose a new brace; earlier trials remain below.
+
+The native load/panel radio groups support arrow keys. The SVG load handle also
+supports arrows and Home/End. Commit, history, navigation and view controls work
+with the keyboard. Results remain hidden until commit. Deformed overlays share
+the displayed **200×** magnification; numeric values remain in actual mm/N.
 
 ## Handoff documents
 
@@ -45,6 +57,7 @@ session-only trials. No database, remote service, or account is required.
 - [Fixture provenance](docs/fixtures.md): expected data, tolerances, and mock limitations.
 - [Phase 1 acceptance](docs/phase-1.md): what was delivered and how to verify it.
 - [Phase 2 acceptance and API](docs/phase-2.md): preset, solver, ranking, numerical policy and benchmark.
+- [Phase 3 acceptance and handoff](docs/phase-3.md): interaction, trial state, live integration and browser checks.
 - [Ownership and merge order](docs/merge-plan.md): the next independent work streams.
 - [Full phased plan](output/pdf/Forma_Phased_Build_and_Design_Review.pdf): the planning PDF.
 
@@ -52,11 +65,11 @@ session-only trials. No database, remote service, or account is required.
 
 | Path | Owner | Purpose |
 | --- | --- | --- |
-| `src/app` | Integration | Shell now; reducer, trial history and orchestration in Phase 3 |
+| `src/app` | Integration | Navigation, experiment reducer, immutable trials and live solver orchestration |
 | `src/shared` | Integration | Contracts, release constants and snapshot utility |
 | `src/shared/fixtures` | Integration, structures review | Test/development data only; never runtime fallback |
 | `src/structures` | Structures | Phase 2 preset generator, solver and ranking |
-| `src/studio` | Studio | Phase 3 bridge SVG and controls |
+| `src/studio` | Studio | Bridge SVG, controls, comparison overlays, results and history views |
 | `src/community/costs` | Community | Phase 4 quote calculations and forms |
 | `src/community/report` | Integration | Phase 5 immutable report and print view |
 | `src/community/measurements` | Community | Optional physical readings |
@@ -68,12 +81,12 @@ The boundary tests protect that separation.
 
 ## Next work
 
-The next work is **Phase 3 (SVG, accessible controls, trial state and live solver
-integration)**. Phase 4.1 (cost functions) can proceed independently. Keep one
+The next work is **Phase 4 (cost calculations, editable packages and domain
+isolation)**, followed by Phase 5 reporting. Keep one
 writer per module and put any shared-contract changes in a preceding
 integration-owned PR. No later-phase function returns a fake successful result.
 
-The `feat/codex-phase-1` branch preserves this implementation as an independent
+The `phases` branch (formerly `feat/codex-phase-1`) preserves this implementation as an independent
 snapshot in `itsvaibhav2k-alt/forma`. It does not share commit ancestry with that
 repository's `main`, which contains the other agent's calculation engines.
 Reconcile the contracts and numerical defaults before selectively integrating
