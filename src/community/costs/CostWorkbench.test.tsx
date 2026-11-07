@@ -6,7 +6,7 @@ import { CostWorkbench } from './CostWorkbench';
 import { useQuotes } from './useQuotes';
 
 afterEach(cleanup);
-function Harness() { return <CostWorkbench {...useQuotes()} />; }
+function Harness({ projectStorage = false }: { projectStorage?: boolean }) { return <CostWorkbench {...useQuotes()} projectStorage={projectStorage} />; }
 const loadExample = async () => {
   const user = userEvent.setup();
   render(<Harness />);
@@ -50,7 +50,8 @@ it('keeps upfront affordability when upkeep is cleared and treats zero as a know
   await user.clear(screen.getByLabelText('Package B Annual upkeep (USD/year)'));
   expect(resultsFor('B')).toHaveTextContent('$21,000.00');
   expect(resultsFor('B')).toHaveTextContent('$1,000.00');
-  expect(within(resultsFor('B')).getByText('Unknown')).toBeVisible();
+  expect(within(resultsFor('B')).getAllByText('Unknown')).toHaveLength(2);
+  within(resultsFor('B')).getAllByText('Unknown').forEach(value => expect(value).toBeVisible());
   expect(screen.getByText('$234.46')).toBeVisible();
   expect(screen.getByLabelText('Package B Annual upkeep source type')).toBeDisabled();
   await user.type(screen.getByLabelText('Package B Annual upkeep (USD/year)'), '0');
@@ -102,4 +103,35 @@ it('caps excess cash contributions at upfront cost without crediting maintenance
   expect(resultsFor('B')).toHaveTextContent('$0.00');
   expect(resultsFor('B')).toHaveTextContent('$3,838.59');
   expect(screen.getAllByText(/Excess does not offset upkeep/)).toHaveLength(2);
+});
+
+it('describes project persistence without claiming unsaved inputs are stored', () => {
+  const view = render(<Harness projectStorage />);
+  expect(screen.getByText(/Cost inputs are included in your project/)).toHaveTextContent('Check the project save status before leaving');
+  expect(screen.queryByText(/Inputs stay in this session/)).not.toBeInTheDocument();
+  view.rerender(<Harness />);
+  expect(screen.getByText(/Inputs stay in this session/)).toBeVisible();
+});
+
+it('explains cheaper upkeep and total cost when the upfront prices are equal', async () => {
+  await loadExample();
+  fireEvent.change(screen.getByLabelText('Package B Materials (USD)'), { target: { value: '12000' } });
+  const insight = screen.getByRole('region', { name: 'Cost efficiency under these assumptions' });
+  expect(screen.getByText('Neither package has a higher upfront cost. No upfront premium needs to be recovered.')).toBeVisible();
+  expect(insight).toHaveTextContent('Package B (fictional) has lower annual upkeep than Package A (fictional) by $450.00 per year.');
+  expect(insight).toHaveTextContent('Package B (fictional) has lower discounted total');
+  expect(resultsFor('A')).toHaveTextContent('$900.00 / year');
+  expect(resultsFor('B')).toHaveTextContent('$450.00 / year');
+});
+
+it('keeps known upkeep savings visible while missing purchase prices prevent a total-cost winner', async () => {
+  const user = await loadExample();
+  await user.clear(screen.getByLabelText('Package A Materials (USD)'));
+  const insight = screen.getByRole('region', { name: 'Cost efficiency under these assumptions' });
+  expect(insight).toHaveTextContent('Unknown until discounted total is known for Package A (fictional). No lower-cost package is identified.');
+  expect(insight).toHaveTextContent('Package B (fictional) has lower annual upkeep than Package A (fictional) by $450.00 per year.');
+  expect(insight).not.toHaveTextContent('has lower discounted total');
+  await user.clear(screen.getByLabelText('Package B Annual upkeep (USD/year)'));
+  expect(insight).toHaveTextContent('Unknown until annual upkeep is known for Package B (fictional).');
+  expect(insight).not.toHaveTextContent('has lower annual upkeep');
 });

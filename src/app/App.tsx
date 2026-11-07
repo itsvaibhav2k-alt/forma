@@ -97,7 +97,7 @@ export function App({ ranker = rankBraces, initialWorkspace, onWorkspaceChange, 
           onLoadChange={experiment.moveLoad} onPanelChange={panelId => experiment.dispatch({ type: 'prediction/select-panel', panelId })}
           onCommit={experiment.commit} onStart={experiment.startRound}
           onSelectTrial={trialId => experiment.dispatch({ type: 'trial/select', trialId })} />
-          : view === 'costs' ? <CostWorkbench {...quotes} />
+          : view === 'costs' ? <CostWorkbench {...quotes} projectStorage={!!onWorkspaceChange} />
           : view === 'measurements' ? <MeasurementWorkbench cases={cases} {...measurements} projectStorage={!!onWorkspaceChange} />
           : view === 'template' ? pattern && <AssemblyTemplate pattern={pattern} />
           : report && <ReportPreview report={report} />}

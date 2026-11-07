@@ -32,6 +32,8 @@
 .break-even-card { padding: 25px 28px; margin-top: 20px; background: #e8eddf; border: 1px solid #d4dfc7; border-radius: 8px; }
 .break-even-card h3 { font-size: 20px; font-weight: 550; margin: 7px 0 14px; }
 .break-even-card p:not(.eyebrow) { font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+.cost-efficiency-card p + p { margin-top: 8px; }
+.cost-summary-card strong small { font-size: 12px; letter-spacing: 0; }
 .break-even-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin: 20px 0; }
 .break-even-metrics > div > span:first-child { display: block; font-size: 11px; color: #607454; }
 .break-even-metrics strong { display: block; font-size: 28px; font-weight: 500; margin-top: 5px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }

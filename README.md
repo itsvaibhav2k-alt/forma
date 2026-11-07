@@ -72,7 +72,10 @@ the displayed **200×** magnification; numeric values remain in actual mm/N.
 2. Choose **Load fictional example** to try the labeled specification inputs.
    At 10 years and 3%, upfront costs are **$19,000 / $21,000**, funding gaps
    **$0 / $1,000**, and discounted totals **$26,677.18 / $24,838.59**.
-3. The higher-upfront option needs **$234.46/year** in upkeep savings; the example
+3. The cost-efficiency summary identifies the lower discounted total and annual
+   upkeep independently, including when upfront prices are equal or unknown.
+   In this example, Package B saves **$1,838.59** over the horizon.
+   The higher-upfront option needs **$234.46/year** in upkeep savings; the example
    expects **$450/year**. Set the rate to 0% and the threshold becomes **$200/year**.
 4. Clear annual upkeep: its discounted total becomes unknown while upfront
    affordability remains available. Enter `0` only for a known zero cost.

@@ -13,9 +13,10 @@ interface Props {
   setDraft: Dispatch<SetStateAction<QuoteDraft>>;
   inputs: QuoteInputs;
   result: CostResult;
+  projectStorage?: boolean;
 }
 
-export function CostWorkbench({ draft, setDraft, inputs, result }: Props) {
+export function CostWorkbench({ draft, setDraft, inputs, result, projectStorage = false }: Props) {
   const emptyPackages = draft.packages.every(pkg => COST_FIELDS.every(field => pkg.amounts[field].raw.trim() === ''));
   const setupOnly = emptyPackages && result.status === 'error' && result.issues.every(issue => issue.field === 'scope');
   const issues = result.status === 'error' && !setupOnly ? result.issues : [];
@@ -69,6 +70,6 @@ export function CostWorkbench({ draft, setDraft, inputs, result }: Props) {
       </section>;
     })}</div>
 
-    <section className="cost-assumptions" aria-labelledby="cost-assumptions-heading"><h2 id="cost-assumptions-heading">What these numbers assume</h2><p>All amounts are real USD. Upkeep stays constant and is paid at year end. Discounted total = upfront cost + discounted upkeep. The scope excludes replacement costs and residual value.</p><p>A source label records the basis of an amount; it does not verify a quote. This comparison does not use or certify the tabletop bridge design. Keep non-cost needs, supplier review and remaining uncertainties in the decision.</p><p>Inputs stay in this session. Reloading clears them. Capture a decision sheet below to preserve these inputs with a selected trial.</p></section>
+    <section className="cost-assumptions" aria-labelledby="cost-assumptions-heading"><h2 id="cost-assumptions-heading">What these numbers assume</h2><p>All amounts are real USD. Upkeep stays constant and is paid at year end. Discounted total = upfront cost + discounted upkeep. The scope excludes replacement costs and residual value.</p><p>A source label records the basis of an amount; it does not verify a quote. This comparison does not use or certify the tabletop bridge design. Keep non-cost needs, supplier review and remaining uncertainties in the decision.</p><p>{projectStorage ? 'Cost inputs are included in your project. Check the project save status before leaving; unsaved changes can be lost on reload.' : 'Inputs stay in this session. Reloading clears them.'} Capture a decision sheet below to freeze these inputs with a selected trial.</p></section>
   </div>;
 }
