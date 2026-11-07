@@ -1,7 +1,7 @@
 # Forma
 
-A local browser workbench for a one-brace truss experiment, an independent package
-cost comparison, and a selected-trial decision sheet.
+A browser workspace for comparing build-option costs, testing a one-brace truss
+prediction, and capturing the evidence and assumptions in a decision sheet.
 
 **Phases 1–5 and optional Phase 7 are implemented; Phase 6 release tooling is ready.** Native PDF and
 presentation-laptop acceptance remain manual handoffs. Choose a load position and brace, commit your
@@ -18,8 +18,8 @@ No fixture numbers are used as calculated results.
 private, persistent projects. Open **Projects & account**, name the workspace and
 choose **Save project** once. Further edits autosave after a short pause, with
 visible save status and conflict protection; after reloading, reopen the project
-from your list. This supports local or hosted Supabase; the development checkout
-is now connected to the hosted Forma project. See the
+from your list. Accounts and storage are available when the build is configured
+with local or hosted Supabase; without configuration, the workspace is session-only. See the
 [setup and feature boundaries](docs/backend-feature-1.md).
 
 ## Run locally
@@ -130,7 +130,7 @@ serve as assembly patterns. See the [physical checklist](docs/physical-checklist
 ## Handoff documents
 
 - [Phase 1 decisions](docs/decisions.md): scope, units, stack, and explicit exclusions.
-- [Shared contracts](docs/contracts.md): module APIs and future reducer behavior.
+- [Shared contracts](docs/contracts.md): module APIs, state transitions and persistence boundaries.
 - [Fixture provenance](docs/fixtures.md): expected data, tolerances, and mock limitations.
 - [Phase 1 acceptance](docs/phase-1.md): what was delivered and how to verify it.
 - [Phase 2 acceptance and API](docs/phase-2.md): preset, solver, ranking, numerical policy and benchmark.
@@ -141,8 +141,8 @@ serve as assembly patterns. See the [physical checklist](docs/physical-checklist
 - [Phase 7 implementation](docs/phase-7.md): measurements, uncertainty screening, separate assembly patterns and verification.
 - [Backend feature 1](docs/backend-feature-1.md): accounts, private projects, autosave, local/hosted setup and validation.
 - [Presentation-laptop checklist](docs/release-checklist.md) and [90-second demo script](docs/demo-script.md).
-- [Ownership and merge order](docs/merge-plan.md): the next independent work streams.
-- [Full phased plan](output/pdf/Forma_Phased_Build_and_Design_Review.pdf): the planning PDF.
+- [Main-engine integration record](docs/main-engine-integration.md): pinned engine provenance and numerical reconciliation.
+- [Ownership and merge order](docs/merge-plan.md): historical implementation work streams.
 
 ## Repository boundaries
 
@@ -170,11 +170,11 @@ release commit/archive freeze follows those checks. Keep one
 writer per module and put any shared-contract changes in a preceding
 integration-owned PR. No later-phase function returns a fake successful result.
 
-The `phases` branch (formerly `feat/codex-phase-1`) preserves this implementation as an independent
-snapshot in `itsvaibhav2k-alt/forma`. It does not share commit ancestry with that
-repository's `main`, which contains the other agent's calculation engines.
-Reconcile the contracts and numerical defaults before selectively integrating
-the implementations. No engine code from `main` is included in this snapshot.
+The integrated application is on `main` in `itsvaibhav2k-alt/forma`. It combines
+the experiment workspace, pinned structural and financial engines, and optional
+Supabase accounts and private projects. Earlier phase documents are historical
+implementation records; their branch names, preview ports and test counts are not
+the current deployment status. Record the exact deployed revision for submission.
 
 ## Move the candidate to another laptop
 
@@ -196,8 +196,8 @@ install or `node_modules`. It binds loopback only, requires an explicit free por
 and restricts runtime resources/connections to its own origin. Do not open
 `dist/index.html` directly. Reload clears session data.
 
-This is a **candidate**, not a certified release. The launcher is covered by
-in-memory tests; actual socket startup was blocked by sandbox permissions and the
-escalation was declined. Complete the included checklist on the actual laptop,
+The portable archive requires its own acceptance on the presentation laptop.
+The launcher has automated checks; run `npm run test:release:network` for the
+real-loopback check. Complete the included checklist on the actual laptop,
 including native printing and physical internet disconnection. After acceptance,
 commit the source, package a clean tree and rehearse that exact final archive.
