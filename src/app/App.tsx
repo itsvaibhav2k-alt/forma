@@ -57,7 +57,7 @@ export function App({ ranker = rankBraces }: { ranker?: RankBraces } = {}) {
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${view === 'experiment' ? 'experiment-shell' : ''}`}>
       <a className="skip-link" href="#workspace">Skip to workspace</a>
       <header className="site-header">
         <a className="wordmark" href="/" aria-label="Forma home">

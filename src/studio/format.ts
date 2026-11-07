@@ -1,9 +1,9 @@
 import { PANEL_IDS, type DeflectionChange, type LoadNodeId, type PanelId, type RankedBraces } from '../shared';
 
-export const formatMm = (value: number) => value.toFixed(6);
+export const formatMm = (value: number) => Number.isFinite(value) ? value.toFixed(6) : 'Unknown';
 export const formatChange = (change: DeflectionChange) => change.kind === 'relative'
-  ? `${change.reductionPercent.toFixed(2)}%` : `${formatMm(change.reductionMm)} mm`;
-export const formatForce = (value: number) => Math.abs(value) < 1e-9 ? '0.000 N · zero'
+  ? Number.isFinite(change.reductionPercent) ? `${change.reductionPercent.toFixed(2)}%` : 'Unknown' : `${formatMm(change.reductionMm)} mm`;
+export const formatForce = (value: number | undefined) => value === undefined || !Number.isFinite(value) ? 'Unknown' : Math.abs(value) < 1e-9 ? '0.000 N · zero'
   : `${value > 0 ? '+' : '−'}${Math.abs(value).toFixed(3)} N · ${value > 0 ? 'tension' : 'compression'}`;
 
 export function panelRank(results: RankedBraces, panel: PanelId): number {

@@ -24,6 +24,17 @@ interface ExperimentProps {
 }
 
 export function Experiment({ baseline, load, panelId, results, error, trial, trials, isRetest, inspectedTrialId, onReturn, onLoadChange, onPanelChange, onCommit, onStart, onSelectTrial }: ExperimentProps) {
+  const [representation, setRepresentation] = useState<'assembly' | 'structural'>('structural');
+  const feedback = useRef<HTMLDivElement>(null);
+  const previousResults = useRef(results);
+  useLayoutEffect(() => {
+    // A mobile commit must bring its answer into view; desktop stays in place.
+    if (results && !previousResults.current && !inspectedTrialId) {
+      const bounds = feedback.current?.getBoundingClientRect();
+      if (window.innerWidth <= 740 && bounds && bounds.bottom > window.innerHeight) feedback.current?.scrollIntoView({ block: 'nearest' });
+    }
+    previousResults.current = results;
+  }, [results, inspectedTrialId]);
   const [comparison, setComparison] = useState<'both' | 'original' | 'modified'>('both');
   const [showDeformation, setShowDeformation] = useState(true);
   const [showForces, setShowForces] = useState(false);
@@ -57,48 +68,56 @@ export function Experiment({ baseline, load, panelId, results, error, trial, tri
     <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">{announcement}</p>
     {inspecting && <section className="saved-prediction" aria-label="History inspection"><div><h2>Inspecting saved Trial {String(trialNumber).padStart(2, '0')} · {panelId} at {load.nodeId}</h2><p>Read-only saved result. Your current experiment and retest are preserved.</p></div><button ref={returnButton} className="outline-button" type="button" onClick={onReturn}>Back to current experiment</button></section>}
     <section className="workspace-grid" aria-label="Bridge experiment">
-      <div className="workspace-card">
-        <div className="card-heading"><h2>Bridge workspace</h2><span className="tag">{locked ? isRetest ? 'Same brace · New load' : `Saved trial ${trialNumber}` : 'Make your prediction'}</span></div>
-        <ModelView baseline={baseline} loadNodeId={load.nodeId} panelId={panelId} results={results} locked={locked} />
+      <div className="workspace-card viewport-card">
+        <div className="card-heading"><div className="viewport-title"><h2>Bridge workspace</h2><span className="tag">{locked ? isRetest ? 'Same brace · New load' : `Saved trial ${trialNumber}` : 'Make your prediction'}</span></div>
+        <div className="representation-controls" role="group" aria-label="Bridge representation">
+          <span className="sr-only">Representation</span>{(['assembly', 'structural'] as const).map(value => <button key={value} type="button" aria-pressed={representation === value} onClick={() => setRepresentation(value)}>{value === 'assembly' ? 'Assembly' : 'Structural'}</button>)}
+        </div></div>
+        {representation === 'assembly' ? <ModelView baseline={baseline} loadNodeId={load.nodeId} panelId={panelId} results={results} locked={locked} /> : <>
         <BridgeCanvas baseline={baseline} loadNodeId={load.nodeId} panelId={panelId} results={results}
           comparison={results ? comparison : 'both'} showDeformation={Boolean(results) && showDeformation} showForces={Boolean(results) && showForces}
           locked={locked} readOnly={inspecting} onLoadChange={onLoadChange} onPanelChange={onPanelChange} />
         <div className="bridge-legend"><span><i className="legend-line baseline" />Original members</span><span><i className="legend-line brace" />{locked ? 'Your brace' : 'Brace preview'}</span><span>B0 pin · B4 roller</span></div>
-        {results && <div className="view-controls">
+        {results && <details className="view-controls"><summary>Structural overlays and comparison</summary>
           <fieldset className="segmented-control"><legend>Compare designs</legend>{(['both', 'original', 'modified'] as const).map(value => <label key={value}><input type="radio" name="comparison" checked={comparison === value} onChange={() => setComparison(value)} /><span>{value === 'both' ? 'Both' : value === 'original' ? 'Original' : 'With brace'}</span></label>)}</fieldset>
           <div className="overlay-toggles"><label><input type="checkbox" checked={showDeformation} onChange={event => setShowDeformation(event.target.checked)} />Deformed shape</label><label><input type="checkbox" checked={showForces} onChange={event => setShowForces(event.target.checked)} />Axial force colors</label></div>
-          {showDeformation && <div className="bridge-legend deformation-legend"><span><i className="legend-line original" />Original</span><span><i className="legend-line modified" />With brace</span><strong>Displacements ×{DEFORMATION_SCALE} for both</strong></div>}
-          {showForces && <p className="force-legend"><span className="tension-text">Tension (+)</span> · <span className="compression-text">Compression (−)</span> · Gray = zero. Colors show {comparison === 'original' ? 'original' : 'your braced design'} forces; signed values are below.</p>}
-        </div>}
-        <dl className="preset-facts"><div><dt>Span</dt><dd>240 <span>mm</span></dd></div><div><dt>Height</dt><dd>40 <span>mm</span></dd></div><div><dt>Downward load</dt><dd>10 <span>N</span></dd></div><div><dt>Brace allowance</dt><dd>1</dd></div></dl>
+
+        </details>}
+          {results && showDeformation && <div className="bridge-legend deformation-legend"><span><i className="legend-line original" />Original</span><span><i className="legend-line modified" />With brace</span><strong>Displacements ×{DEFORMATION_SCALE} for both</strong></div>}
+          {results && showForces && <p className="force-legend"><span className="tension-text">Tension (+)</span> · <span className="compression-text">Compression (−)</span> · Gray = zero. Colors show {comparison === 'original' ? 'original' : 'your braced design'} forces; signed values are below.</p>}
+        </>}
+
       </div>
       <aside className="sequence-card" aria-labelledby="controls-heading">
         <p className="eyebrow">{inspecting ? 'SAVED HISTORY' : locked ? 'CHALLENGE YOUR CHOICE' : 'THE EXPERIMENT'}</p>
         <h2 id="controls-heading">{inspecting ? 'Saved result. Read-only.' : locked ? 'Same brace. A different load.' : 'One brace. Your call.'}</h2>
         <fieldset className="choice-fieldset" disabled={inspecting}><legend><span>01</span> Position the load</legend>
           <div className="load-options">{LOAD_NODE_IDS.map((id, i) => <label className="choice-tile" key={id}><input type="radio" name="load-position" value={id} checked={load.nodeId === id} onChange={() => onLoadChange(id)} /><span><strong>{id}</strong>{' '}<small>{['Left', 'Center', 'Right'][i]}</small><i className="choice-check" aria-hidden="true">✓</i></span></label>)}</div>
-          <p>{inspecting ? 'The saved load is fixed. Return to the current experiment to retest.' : 'Drag the arrow, use arrow keys, or choose a joint. Load stays at 10 N.'}</p>
+          <p>{inspecting ? 'The saved load is fixed. Return to the current experiment to retest.' : representation === 'structural' ? 'Drag the load, use arrow keys, or choose a joint · 10 N downward.' : 'Choose a joint here. Assembly follows the same 10 N load.'}</p>
         </fieldset>
         <fieldset className="choice-fieldset" disabled={locked}><legend><span>02</span> {locked ? 'Your brace is fixed' : 'Choose a panel'}</legend>
           <div className="panel-options">{PANEL_IDS.map(id => <label className="choice-tile" key={id}><input type="radio" name="brace-panel" value={id} checked={panelId === id} onChange={() => onPanelChange(id)} /><span><strong>{id}</strong><i className="choice-check" aria-hidden="true">✓</i></span></label>)}</div>
-          <p>{locked ? `${panelId} stays in place during retests. Start another prediction to change it.` : 'Each panel adds one equal-length diagonal. Choose before seeing the results.'}</p>
+          <p>{locked ? `${panelId} stays in place during retests. Start another prediction to change it.` : 'One equal-length diagonal. Commit to reveal results.'}</p>
         </fieldset>
         <button className="primary-button" type="button" disabled={locked || !panelId || inspecting} onClick={onCommit}>{locked ? 'Prediction saved' : error ? 'Retry prediction' : 'Commit prediction'}</button>
-        <p className="availability">{inspecting ? 'Return to your current experiment to make changes.' : locked ? 'Move the load to retest. Your original trial is saved.' : panelId ? 'Your choice will be saved before results are revealed.' : 'Select a panel to unlock your prediction.'}</p>
+        <p className="availability">{inspecting ? 'Return to your current experiment to make changes.' : locked ? 'Move the load to retest. Your original trial is saved.' : panelId ? 'Your choice is saved before reveal.' : 'Select a panel to unlock your prediction.'}</p>
         {locked && !inspecting && <button className="outline-button new-round-button" type="button" onClick={onStart}>Start another prediction</button>}
       </aside>
-    </section>
-
+      <div ref={feedback} className="workspace-feedback">
     {error && <section className="analysis-error" role="alert"><h2>Analysis unavailable for {load.nodeId}</h2><p>{error.message}</p><p>{[...error.nodeIds, ...error.memberIds].length > 0 ? `Affected: ${[...error.nodeIds, ...error.memberIds].join(', ')}. ` : ''}No results are shown for this scenario. Saved trials are unchanged.</p>{locked && <button className="outline-button" type="button" onClick={() => onLoadChange(load.nodeId)}>Retry retest</button>}</section>}
 
     {results && panelId && <Results results={results} panelId={panelId} isRetest={isRetest} />}
-    {!results && !error && <div className="prediction-note"><span className="step-number">03</span><div><h3>Predict first. Then see what changes.</h3><p>Displacements, forces and all four rankings will appear after you commit.</p></div><span className="hidden-badge">Results hidden</span></div>}
+    {!results && !error && <div className="prediction-note workspace-card"><div><h3>Results hidden</h3><p>Displacements, forces and all four rankings will appear after you commit.</p></div></div>}
+
+      </div>
+    </section>
+
 
     {trial && <section className="saved-prediction" aria-labelledby="saved-heading"><div><p className="eyebrow">ORIGINAL COMMIT · TRIAL {String(trialNumber).padStart(2, '0')}</p><h2 id="saved-heading">Saved prediction: {trial.chosenPanelId} at {trial.load.nodeId}</h2><p>{formatMm(trial.results.baseline.analysis.loadedJointDisplacementMm)} → {formatMm(trial.results.candidates[trial.chosenPanelId].analysis.loadedJointDisplacementMm)} mm · {formatChange(trial.results.candidates[trial.chosenPanelId].change)} reduction</p><p className="saved-note">This first result stays fixed while you retest.</p></div><button className="outline-button" type="button" onClick={event => inspect(event, trial.id)}>Show saved result</button></section>}
 
     <section ref={history} className="trial-history" aria-labelledby="history-heading"><div className="section-heading"><h2 id="history-heading">Your trials <span>{trials.length.toString().padStart(2, '0')}</span></h2><p>Saved for this session · Reloading clears history</p></div>
       {trials.length === 0 ? <p className="history-empty">Your first committed prediction will appear here.</p> : <ol>{trials.map((item, index) => <li key={item.id}><button data-trial-id={item.id} type="button" aria-label={`Trial ${String(index + 1).padStart(2, '0')} · Load ${item.load.nodeId} · Brace ${item.chosenPanelId} · ${formatChange(item.results.candidates[item.chosenPanelId].change)} reduction`} aria-pressed={trial?.id === item.id} onClick={event => inspect(event, item.id)}><span className="trial-number">Trial {String(index + 1).padStart(2, '0')}</span><strong>{item.load.nodeId} / {item.chosenPanelId}</strong><span>{formatChange(item.results.candidates[item.chosenPanelId].change)} reduction</span><span className="history-action">{trial?.id === item.id ? 'Selected' : 'View trial'} ↗</span></button></li>)}</ol>}
     </section>
-    <details className="model-assumptions"><summary>Model and drawing assumptions</summary><p>One planar truss side, ideal pin joints, linear elastic members and small displacements. Only labeled nodes are joints; crossed diagonals are unconnected. E = 10,000 N/mm²; A = 10 mm². Deflection means absolute vertical movement at the loaded joint.</p><p>This tabletop model excludes joint slip, bending, buckling and out-of-plane motion. It does not predict failure load. Magnified deformation is illustrative; numerical results retain their actual units.</p></details>
+    <details className="model-assumptions"><summary>Model and drawing assumptions</summary><dl className="preset-facts"><div><dt>Span</dt><dd>240 <span>mm</span></dd></div><div><dt>Height</dt><dd>40 <span>mm</span></dd></div><div><dt>Downward load</dt><dd>10 <span>N</span></dd></div><div><dt>Brace allowance</dt><dd>1</dd></div></dl><p>One planar truss side, ideal pin joints, linear elastic members and small displacements. Only labeled nodes are joints; crossed diagonals are unconnected. E = 10,000 N/mm²; A = 10 mm². Deflection means absolute vertical movement at the loaded joint.</p><p>This tabletop model excludes joint slip, bending, buckling and out-of-plane motion. It does not predict failure load. Magnified deformation is illustrative; numerical results retain their actual units.</p></details>
   </div>;
 }

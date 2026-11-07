@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it } from 'vitest';
 import { createBridgePreset, rankBraces } from '../structures';
 import { ModelView, toDrawDesign } from './ModelView';
@@ -17,7 +16,7 @@ it('adapts the app design without touching ids, members or supports', () => {
   expect(design.braceOptions.map(option => option.member.id)).toEqual(['brace-P1', 'brace-P2', 'brace-P3', 'brace-P4']);
 });
 
-it('draws a picture only: no overlay hooks, no slider, and analysis views appear after results', async () => {
+it('keeps assembly read-only before and after reveal and follows the selected panel and load', () => {
   const { container, rerender } = render(<ModelView baseline={baseline} loadNodeId="B1" panelId="P2" results={null} locked={false} />);
   expect(screen.getByRole('img', { name: /Load at B1/ })).toBeInTheDocument();
   expect(container.querySelector('[data-overlay]')).toBeNull();
@@ -26,8 +25,9 @@ it('draws a picture only: no overlay hooks, no slider, and analysis views appear
   const results = rankBraces(baseline, { nodeId: 'B1', fxN: 0, fyN: -10 });
   if (results.status === 'error') throw new Error(results.message);
   rerender(<ModelView baseline={baseline} loadNodeId="B1" panelId="P2" results={results} locked />);
-  expect(screen.getByRole('button', { name: 'Deflection' })).toHaveAttribute('aria-pressed', 'true');
-  expect(screen.getByText(/Both magnified 200×/)).toBeInTheDocument();
-  await userEvent.setup().click(screen.getByRole('button', { name: '3D view' }));
-  expect(screen.getByRole('button', { name: '3D view' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.queryByRole('button')).toBeNull();
+  expect(screen.getByText(/Read-only assembly/)).toBeVisible();
+  rerender(<ModelView baseline={baseline} loadNodeId="B3" panelId="P4" results={null} locked={false} />);
+  expect(screen.getByRole('img', { name: /Load at B3, brace in P4/ })).toBeVisible();
+  expect(screen.queryByRole('slider')).toBeNull();
 });

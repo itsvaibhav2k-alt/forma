@@ -72,8 +72,8 @@ export function BridgeCanvas({ baseline, loadNodeId, panelId, results, compariso
   return <div className="bridge-canvas">
     <svg ref={svgRef} className="bridge-svg" viewBox="0 0 680 310" aria-labelledby={`${titleId} ${descriptionId}`}>
       <title id={titleId}>Four-panel bridge with a 10 N load at {loadNodeId}{panelId ? ` and brace ${panelId}` : ''}</title>
-      <desc id={descriptionId}>B0 is pinned; B4 is a vertical roller. Crossed bars are not joined. Use the load handle with arrow keys or the controls below. {results && showDeformation ? 'Displacements are magnified 200 times for both designs.' : 'The drawing shows undeformed geometry.'}</desc>
-      {PANEL_IDS.map((id, i) => <g key={id} aria-hidden="true" onClick={() => { if (!locked) onPanelChange(id); }} className={locked ? '' : 'panel-target'}>
+      <desc id={descriptionId}>B0 is pinned; B4 is a vertical roller. Crossed bars are not joined. Use the load handle with arrow keys or the load controls. {results && showDeformation ? 'Displacements are magnified 200 times for both designs.' : 'The drawing shows undeformed geometry.'}</desc>
+      {PANEL_IDS.map((id, i) => <g key={id} aria-hidden="true" onClick={() => { if (!locked && !readOnly) onPanelChange(id); }} className={locked ? '' : 'panel-target'}>
         <rect x={70 + i * 135} y="64" width="135" height="135" rx="5" className={panelId === id ? 'panel-zone selected' : 'panel-zone'} />
         <text x={137.5 + i * 135} y="45" textAnchor="middle" className={panelId === id ? 'panel-label selected' : 'panel-label'}>{id}</text>
       </g>)}
@@ -98,7 +98,7 @@ export function BridgeCanvas({ baseline, loadNodeId, panelId, results, compariso
         onPointerMove={event => { if (dragging.current === event.pointerId) movePointer(event); }}
         onPointerUp={event => { if (dragging.current === event.pointerId) { movePointer(event); dragging.current = null; event.currentTarget.releasePointerCapture(event.pointerId); } }}
         onPointerCancel={() => { dragging.current = null; }} onLostPointerCapture={() => { dragging.current = null; }}>
-        <rect x={loadX - 29} y="199" width="58" height="81" rx="9" className="load-hit-area" />
+        <rect x={loadX - 48} y="199" width="96" height="96" rx="9" className="load-hit-area" />
         <path d={`M${loadX} 205 V253 m-9 -11 9 11 9 -11`} />
         <text x={loadX + 22} y="242">10 N</text>
         <text x={loadX} y="297" textAnchor="middle" className="drag-caption">{readOnly ? 'Saved load' : '↔ drag load'}</text>

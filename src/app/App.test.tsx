@@ -103,6 +103,7 @@ describe('live experiment', () => {
     expect(screen.getByText('Displacements ×200 for both')).toBeVisible();
     expect(container.querySelectorAll('[data-overlay="original"] line')).toHaveLength(17);
     expect(container.querySelectorAll('[data-overlay="modified"] line')).toHaveLength(18);
+    await user.click(screen.getByText('Structural overlays and comparison'));
     await user.click(screen.getByRole('radio', { name: 'Original' }));
     expect(container.querySelector('[data-overlay="modified"]')).toBeNull();
     expect(container.querySelector('.preview-brace')).toBeNull();
@@ -110,6 +111,7 @@ describe('live experiment', () => {
     expect(container.querySelector('[data-overlay]')).toBeNull();
     await user.click(screen.getByRole('checkbox', { name: 'Axial force colors' }));
     expect(screen.getByText('Tension (+)')).toBeVisible();
+    await user.click(screen.getByText('All placements, member forces and reactions'));
     await user.click(screen.getByText('Member forces and support reactions'));
     const forces = screen.getByRole('table', { name: 'Axial member forces for load B1' });
     expect(within(forces).getAllByText(/N · tension/).length).toBeGreaterThan(0);

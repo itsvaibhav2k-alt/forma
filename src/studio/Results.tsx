@@ -13,6 +13,7 @@ export function Results({ results, panelId, isRetest }: { results: RankedBraces;
       <div><span>With your {panelId} brace</span><strong>{formatMm(chosen.analysis.loadedJointDisplacementMm)} <small>mm</small></strong></div>
       <div className="gain-metric"><span>{chosen.change.kind === 'relative' ? 'Deflection reduction' : 'Absolute reduction'}</span><strong>{formatChange(chosen.change)}</strong></div>
     </div>
+    <details className="ranking-details"><summary>All placements, member forces and reactions</summary>
     <div className="ranking-heading"><h3>All four placements</h3><p>{results.bestIds.length > 1 ? 'Tied best' : 'Best placement'}: <strong>{winners}</strong></p></div>
     <table className="ranking-table"><caption className="sr-only">Brace ranking at {results.load.nodeId}. Lower vertical displacement is better.</caption>
       <thead><tr><th scope="col">Rank / panel</th><th scope="col">Displacement <span>(mm)</span></th><th scope="col">Reduction</th></tr></thead>
@@ -26,15 +27,17 @@ export function Results({ results, panelId, isRetest }: { results: RankedBraces;
       <p>Positive (+) means tension; negative (−) means compression. Reactions use positive x right and positive y up.</p>
       <div className="table-scroll"><table><caption>Axial member forces for load {results.load.nodeId}</caption><thead><tr><th scope="col">Member</th><th scope="col">Original</th><th scope="col">With {panelId}</th></tr></thead>
         <tbody>{chosen.design.members.map(member => <tr key={member.id}><th scope="row">{member.startNodeId}–{member.endNodeId}{member.id === `brace-${panelId}` ? ' (added)' : ''}</th>
-          <td>{results.baseline.analysis.axialForceNByMember[member.id] === undefined ? 'Not present' : formatForce(results.baseline.analysis.axialForceNByMember[member.id]!)}</td><td>{formatForce(chosen.analysis.axialForceNByMember[member.id]!)}</td></tr>)}</tbody>
+          <td>{!results.baseline.design.members.some(original => original.id === member.id) ? 'Not present' : formatForce(results.baseline.analysis.axialForceNByMember[member.id])}</td><td>{formatForce(chosen.analysis.axialForceNByMember[member.id])}</td></tr>)}</tbody>
       </table></div>
       <div className="table-scroll"><table><caption>Support reactions in N</caption><thead><tr><th scope="col">Support</th><th scope="col">Original (x, y)</th><th scope="col">With {panelId} (x, y)</th></tr></thead>
         <tbody>{Object.entries(results.baseline.analysis.reactionNByNode).map(([id, reaction]) => {
-          const modified = chosen.analysis.reactionNByNode[id]!;
-          const pair = (x: number, y: number) => `${(Math.abs(x) < 1e-9 ? 0 : x).toFixed(3)}, ${(Math.abs(y) < 1e-9 ? 0 : y).toFixed(3)}`;
-          return <tr key={id}><th scope="row">{id}</th><td>{pair(reaction.x, reaction.y)}</td><td>{pair(modified.x, modified.y)}</td></tr>;
+          const modified = chosen.analysis.reactionNByNode[id];
+          const value = (n: number | undefined) => n === undefined || !Number.isFinite(n) ? 'Unknown' : (Math.abs(n) < 1e-9 ? 0 : n).toFixed(3);
+          const pair = (x: number | undefined, y: number | undefined) => `${value(x)}, ${value(y)}`;
+          return <tr key={id}><th scope="row">{id}</th><td>{pair(reaction.x, reaction.y)}</td><td>{pair(modified?.x, modified?.y)}</td></tr>;
         })}</tbody>
       </table></div>
+    </details>
     </details>
   </section>;
 }
