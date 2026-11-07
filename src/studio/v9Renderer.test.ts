@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { runInNewContext } from 'node:vm';
 import { createBraceMember, createBridgePreset } from '../structures';
-import { renderV9Assembly, type V9RenderOptions } from './v9Renderer.js';
+import { createV9LightingWorker, renderV9Assembly, type V9RenderOptions } from './v9Renderer.js';
 
 function options(): V9RenderOptions {
   const baseline = createBridgePreset();
@@ -40,4 +41,26 @@ describe('v9 handoff renderer', () => {
     expect(result.svgInner).not.toMatch(/NaN|Infinity|undefined/);
     expect(result.lighting).toBeNull();
   });
+});
+
+it('keeps the lighting worker entry point stable when production minifies the serialized function name', async () => {
+  const blobs: Blob[] = [];
+  const createURL = vi.spyOn(URL, 'createObjectURL').mockImplementation(blob => { blobs.push(blob as Blob); return 'blob:worker-test'; });
+  const revokeURL = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+  vi.stubGlobal('Worker', class { terminate() {} });
+  try {
+    createV9LightingWorker();
+    const blob = blobs[0];
+    if (!blob) throw new Error('Lighting worker source was not created');
+    // Production minifiers rename the function declaration returned by toString().
+    const source = (await blob.text()).replace('function calcAssemblyStudioPixels(', 'function minified(');
+    const messages: unknown[] = [];
+    const workerScope: { onmessage?: (event: unknown) => void; postMessage: (message: unknown) => void } = { postMessage: message => messages.push(message) };
+    runInNewContext(source, { self: workerScope });
+    workerScope.onmessage?.({ data: { requestId: 7, geometry: { width: 10, height: 10, faces: [], origin: [0, 0], axes: [[1, 0], [0, 1], [0, 0]], azimuth: 0, elevation: 0 } } });
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toMatchObject({ requestId: 7, pixels: { width: 10, height: 10 } });
+  } finally {
+    createURL.mockRestore(); revokeURL.mockRestore(); vi.unstubAllGlobals();
+  }
 });
