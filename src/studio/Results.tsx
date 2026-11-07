@@ -22,7 +22,7 @@ export function Results({ results, panelId, isRetest }: { results: RankedBraces;
         <td>{formatMm(results.candidates[id].analysis.loadedJointDisplacementMm)}</td><td>{formatChange(results.candidates[id].change)}</td>
       </tr>)}</tbody>
     </table>
-    <p className="result-note">Each option adds one equal-length brace to the original bridge. Rank uses unrounded results; displayed values are rounded.</p>
+    <p className="result-note">Displacement is how far the loaded joint moves down under the 10 N load; lower is better. Reduction compares each brace with the unbraced bridge. Each option adds one equal-length brace to the original bridge. Rank uses unrounded results; displayed values are rounded.</p>
     <details className="force-details"><summary>Member forces and support reactions</summary>
       <p>Positive (+) means tension; negative (−) means compression. Reactions use positive x right and positive y up.</p>
       <div className="table-scroll"><table><caption>Axial member forces for load {results.load.nodeId}</caption><thead><tr><th scope="col">Member</th><th scope="col">Original</th><th scope="col">With {panelId}</th></tr></thead>
