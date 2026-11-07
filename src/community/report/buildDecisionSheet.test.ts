@@ -98,4 +98,13 @@ describe('immutable report builder', () => {
     const second = buildDecisionSheet(first, 'two', time);
     expect(second.assumptions).toEqual(first.assumptions);
   });
+
+  it('reassesses physical resolution instead of trusting a caller-supplied validation claim', () => {
+    const data = inputs();
+    const claimed = { ...reading(data), assessment: 'resolved' as const };
+    const report = buildDecisionSheet({ ...data, readings: [claimed] }, 'report-physical', time);
+    expect(report.readings[0]!.assessment).toBe('inconclusive');
+    expect(claimed.assessment).toBe('resolved');
+    expect(() => buildDecisionSheet({ ...data, readings: [{ ...claimed, displacement: 99 }] }, 'report-physical', time)).toThrow('mean');
+  });
 });

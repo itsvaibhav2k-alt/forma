@@ -121,7 +121,26 @@ features, solver/cost formulas, dependencies or shared contracts are introduced.
 Source tests and release-script tests are explicitly separated in the runner.
 See [Phase 6 evidence](phase-6.md) and [the acceptance checklist](release-checklist.md).
 
-## Later integration order
+## Phase 7 handoff
+
+The user authorized optional development on `phases` while Phase 6's manual gates
+remain pending. Implementation is ready for review; this does not certify 6.1 or
+merge anything into the other agent's `main`.
+
+| Subphase | Prerequisite | Review boundaries | Acceptance |
+| --- | --- | --- | --- |
+| 7.1 Measurements | 4.3 + 5.1; integrate after 6.1 | Pure measurement engine/tests, session hook/form, report assessment and presentation, then app wiring | Unit/sign/association checks, repeat screening, immutable report capture, no automatic agreement claim |
+| 7.2 Assembly pattern | 2.1 + 5.2; integrate after 6.1 | Pure geometry builder/tests, separate SVG/print component/styles, then app capture/navigation | Correct geometry/lengths/crossings, physical units and overflow guard; actual printer ruler check pending |
+
+Review pure modules before their views. Integration owns the shared comment,
+report changes, App wiring, boundary/integration tests and release packaging. The
+shared data shape, solver, cost engine, fixtures and dependencies are unchanged.
+7.1 and 7.2 can be reviewed independently, but their App edits need one integration
+owner. Rerun release checks and package a new candidate after either is integrated.
+Optional physical validation does not block the core release if the optional
+demonstration is omitted. See [Phase 7](phase-7.md) and [physical checks](physical-checklist.md).
+
+## Integration sequence
 
 1. 2.1 → 2.2 solver → 2.3 ranking.
 2. 3.1 → 3.2 reducer/history and fixture-driven views. Integration owns state;
@@ -132,8 +151,8 @@ See [Phase 6 evidence](phase-6.md) and [the acceptance checklist](release-checkl
 6. Required modules → 6.1 integrated checks → 6.2 offline production check →
    6.3 freeze and rehearsal.
 
-Optional measurements and templates do not block release. Consult the PDF for
-their prerequisites and rerun release checks if optional work is merged.
+7. Optional 7.1 and/or 7.2 after their prerequisites and 6.1; repeat affected release
+   checks and rebuild the candidate before final freeze.
 
 ## PR checklist
 

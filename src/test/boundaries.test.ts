@@ -50,3 +50,11 @@ it('keeps report capture pure and report presentation independent of live applic
   expect(view).not.toMatch(/from\s+['"][^'"]*app\//);
   expect(view).not.toMatch(/\b(?:useExperiment|useQuotes|useState|compareQuotes|rankBraces)\b/);
 });
+
+it('keeps physical interpretation and template geometry independent of React, app state and solver calls', () => {
+  for (const path of ['community/measurements/engine.ts', 'community/template/pattern.ts']) {
+    const source = readFileSync(join(root, path), 'utf8');
+    expect(source).not.toMatch(/from\s+['"][^'"]*(?:react|app\/|studio|structures\/)/);
+    expect(source).not.toMatch(/\b(?:window|document|rankBraces|analyze)\b/);
+  }
+});

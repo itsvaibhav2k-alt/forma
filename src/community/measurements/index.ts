@@ -1,2 +1,3 @@
-/** Optional Phase 7.1. Raw measurement values retain units and case identity. */
+export { measurementCases, matchesReading, readingsForCases, validateReading, assessReading, recordMeasurement } from './engine';
+export type { MeasurementCase, MeasurementDraft } from './engine';
 export type { Reading } from '../../shared';

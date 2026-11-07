@@ -1,6 +1,7 @@
-import { LOAD_NODE_IDS, PANEL_IDS, type Analysis, type BuildDecisionSheet, type Design, type Load, type RankedBraces, type Reading, type Trial } from '../../shared';
+import { LOAD_NODE_IDS, PANEL_IDS, type Analysis, type BuildDecisionSheet, type Design, type Load, type RankedBraces, type Trial } from '../../shared';
 import { snapshot } from '../../shared/snapshot';
 import { compareQuotes } from '../costs';
+import { assessReading, matchesReading, measurementCases } from '../measurements';
 
 export const REPORT_ASSUMPTIONS = [
   'One planar truss side; ideal pin joints, axial members, small displacement and linear elasticity. Crossed bars are not joined. Slip, bending, buckling and out-of-plane behavior are excluded.',
@@ -42,16 +43,6 @@ function checkRanking(results: RankedBraces, load: Load, trial: Trial) {
   requireValue(results.bestIds.length > 0 && results.bestIds.every(id => PANEL_IDS.includes(id)), 'Report results need valid winning panel IDs.');
 }
 
-function checkReading(reading: Reading, trial: Trial, cases: readonly { load: Load; results: RankedBraces }[]) {
-  const matched = cases.some(item => sameLoad(item.load, reading.appliedLoad as Load) &&
-    [item.results.baseline.design, item.results.candidates[trial.chosenPanelId].design].some(design =>
-      reading.designId === design.id && reading.presetVersion === design.presetVersion && design.nodes.some(node => node.id === reading.measuredNodeId)));
-  requireValue(matched, 'A measurement must match an included original or chosen-brace design, version, load and measured joint.');
-  requireValue(reading.id.trim() && reading.method.trim() && ['mm', 'cm', 'in'].includes(reading.units) &&
-    ['unassessed', 'inconclusive', 'resolved'].includes(reading.assessment) && typeof reading.notes === 'string' &&
-    (reading.instrumentResolution === null || reading.instrumentResolution > 0) && Array.isArray(reading.rawReadings), 'Measurement metadata or resolution is invalid.');
-}
-
 /** Internal typed port: validate associations, then clone everything; never read live state or rerun the solver. */
 export const buildDecisionSheet: BuildDecisionSheet = (inputs, reportId, createdAtIso) => {
   requireValue(reportId.trim() && /^\d{4}-\d{2}-\d{2}T/.test(createdAtIso) && Number.isFinite(Date.parse(createdAtIso)) && new Date(createdAtIso).toISOString() === createdAtIso, 'Provide a report ID and canonical ISO timestamp.');
@@ -71,10 +62,13 @@ export const buildDecisionSheet: BuildDecisionSheet = (inputs, reportId, created
   requireValue(recalculated.status === 'ok', 'Correct financial input errors before capturing a sheet. Blank amounts may remain unknown.');
   requireValue(equivalent(recalculated, costs), 'The cost results do not match the selected quote inputs.');
   const ids = new Set<string>();
-  for (const reading of readings) {
+  const cases = measurementCases(trial, retest);
+  const assessedReadings = readings.map(reading => {
     requireValue(!ids.has(reading.id), 'Measurement IDs must be unique.'); ids.add(reading.id);
-    checkReading(reading, trial, retest ? [trial, retest] : [trial]);
-  }
+    const target = cases.find(item => matchesReading(reading, item));
+    requireValue(target, 'A measurement must match an included original or chosen-brace design, version, load and measured joint.');
+    return { ...reading, assessment: assessReading(reading, target!).status };
+  });
   requireValue(assumptions.every(item => typeof item === 'string' && item.trim()), 'Report assumptions must be nonempty text.');
-  return snapshot({ ...inputs, costs: recalculated, assumptions: [...new Set([...REPORT_ASSUMPTIONS, ...assumptions])], schemaVersion: 1, reportId, createdAtIso });
+  return snapshot({ ...inputs, readings: assessedReadings, costs: recalculated, assumptions: [...new Set([...REPORT_ASSUMPTIONS, ...assumptions])], schemaVersion: 1, reportId, createdAtIso });
 };

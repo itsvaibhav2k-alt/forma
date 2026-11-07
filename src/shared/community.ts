@@ -76,7 +76,7 @@ export interface CostValidationError {
 
 export type CostResult = Costs | CostValidationError;
 
-/** Retain original units and raw repeated readings; do not invent a converted result. */
+/** Vertical displacement is downward-positive. Retain original units/raw repeats; the UI stores their mean. */
 export interface Reading {
   readonly id: string;
   readonly designId: string;

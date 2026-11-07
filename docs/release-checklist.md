@@ -100,3 +100,19 @@ its CSP on the presentation laptop before relying on the archive for the demo.
 Freeze feature work after acceptance. Fix only correctness or demo-blocking issues,
 then repackage and rerun relevant checks. Do not certify a later build based on an
 earlier rehearsal. Optional measurements/templates are not release blockers.
+
+## Phase 7 — Optional features in this candidate
+
+- [ ] If demonstrating physical evidence, complete `PHYSICAL-CHECKLIST.md` in the
+  bundle (or `docs/physical-checklist.md` in source). Use actual observations only.
+- [ ] Check original/braced and saved/retest associations; exclude unrelated readings.
+- [ ] Confirm capture freezes readings even after a later removal or new trial.
+- [ ] Confirm long readings block overfull report printing while retaining JSON export.
+- [ ] Test the measurement controls and separate SVG download offline under the
+  portable launcher's CSP. Confirm reload clears observations/drafts/captures.
+- [ ] If printing an assembly pattern, use its landscape settings, verify pagination
+  and physically measure the 100 mm bar. Restore portrait settings for reports.
+
+Core acceptance still applies after optional changes. Record which optional
+features were omitted from the demo; do not describe an uncalibrated print or
+synthetic QA readings as physical validation. Repackage after any source changes.

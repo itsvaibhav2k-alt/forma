@@ -19,6 +19,7 @@
 .report-sketch svg { display:block; width:100%; height:96px; }
 .decision-sheet .sheet-caption { font-size:10px; line-height:1.25; }
 .sheet-retest { border-left:2px solid #555; padding-left:8px; }
+.sheet-reading { font-size:10.5px; margin:4px 0; }
 .sheet-cost-table { width:100%; table-layout:fixed; border-collapse:collapse; font-size:11px; margin:5px 0; }
 .sheet-cost-table th, .sheet-cost-table td { text-align:left; vertical-align:top; padding:3px 5px; border-bottom:1px solid #bbb; }
 .sheet-cost-table th:first-child { width:27%; }
@@ -37,10 +38,10 @@
 @media print {
   html, body, #root, .app-shell, main { width:auto!important; margin:0!important; padding:0!important; background:white!important; }
   .site-header, .site-footer, .skip-link, .page-heading, .report-strip, .report-actions, .report-overflow { display:none!important; }
-  main > :not(.report-preview) { display:none!important; }
+  main > :not(.report-preview):not(.template-preview) { display:none!important; }
   .report-paper-scroll { overflow:visible; padding:0; }
   .decision-sheet { width:7.5in; margin:0; padding:0.15in; box-shadow:none; }
   .decision-sheet section, .sheet-header, .sheet-footer, .sheet-cost-table tr { break-inside:avoid; }
   .sheet-cost-table { color:#111!important; }
-  body:has(.app-shell) main:not(:has(.report-preview))::after { content:'Open a captured decision sheet in Forma before printing.'; display:block; padding:24px; }
+  body:has(.app-shell) main:not(:has(.report-preview)):not(:has(.template-preview))::after { content:'Open a captured decision sheet or assembly template in Forma before printing.'; display:block; padding:24px; }
 }

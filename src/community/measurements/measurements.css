@@ -1,0 +1,22 @@
+.measurement-intro, .measurement-records>p { color:#596958; line-height:1.6; font-size:14px; margin:12px 0 20px; max-width:900px; }
+.measurement-editor { max-width:900px; }
+.measurement-fields { padding:24px; display:grid; gap:10px; }
+.measurement-fields label { display:block; font-size:13px; font-weight:600; margin:5px 0; }
+.measurement-fields input, .measurement-fields textarea, .measurement-fields select { width:100%; min-height:42px; padding:10px; font:inherit; color:inherit; border:1px solid #c3cdbd; border-radius:4px; background:white; }
+.measurement-fields textarea { resize:vertical; }
+.measurement-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.measurement-feedback { padding:14px; background:#fff2e9; border:1px solid #ac7154; font-size:13px; }
+.measurement-feedback h3 { font-size:14px; }
+.measurement-fields [role=status] { font-size:13px; }
+.measurement-records { margin-top:30px; }
+.measurement-records h2 { font-size:19px; }
+.measurement-record { margin:14px 0; max-width:900px; }
+.measurement-record h3 { font-size:14px; }
+.measurement-record-body { padding:20px 24px; font-size:13px; line-height:1.65; }
+.measurement-record-body p { margin:5px 0; overflow-wrap:anywhere; }
+.optional-tools { margin-top:22px; padding:20px; border:1px solid #cfd8c7; border-radius:8px; }
+.optional-tools h2 { font-size:17px; margin-bottom:8px; }
+.optional-tools p { font-size:13px; color:#596958; line-height:1.6; margin-bottom:12px; }
+.optional-tools-buttons { display:flex; flex-wrap:wrap; gap:12px; }
+.navigation { flex-wrap:wrap; }
+@media(max-width:740px) { .measurement-grid { grid-template-columns:1fr; gap:10px; } .measurement-fields { padding:18px; } .measurement-fields input,.measurement-fields select,.measurement-fields textarea { font-size:16px; } }

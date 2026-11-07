@@ -1,6 +1,7 @@
 import type { AmountSource, CalculatedAmount, CostField, ReportPayload, Trial } from '../../shared';
 import { assessSavings } from '../costs';
 import { ReportSketch } from './ReportSketch';
+import { assessReading, matchesReading, measurementCases } from '../measurements';
 
 const money = (usd: number) => usd.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 const amountText = (amount: CalculatedAmount) => amount.status === 'known' ? money(amount.usd) : 'Unknown';
@@ -19,6 +20,7 @@ function Prediction({ trial }: { trial: Pick<Trial, 'results' | 'chosenPanelId' 
 export function DecisionSheet({ report }: { report: ReportPayload }) {
   const { trial, retest, quotes, costs } = report;
   const chosen = trial.results.candidates[trial.chosenPanelId];
+  const physicalCases = measurementCases(trial, retest);
   const braceId = chosen.design.members.find(member => !trial.results.baseline.design.members.some(original => original.id === member.id))?.id;
   const sources: AmountSource[] = [];
   const sourceIndex = (source: AmountSource) => {
@@ -35,7 +37,11 @@ export function DecisionSheet({ report }: { report: ReportPayload }) {
       <p className="sheet-caption">Gray: undeformed geometry. Dashed: deformed members. Heavy solid: added brace. Both deformations ×200; sketches are not assembly templates.</p>
     </section>
     <section aria-labelledby="sheet-predicted"><h2 id="sheet-predicted">02 / Predicted</h2><Prediction trial={trial} />{retest && <div className="sheet-retest"><h3>Scenario R · Same-brace retest (separate from saved prediction)</h3><Prediction trial={retest} /></div>}</section>
-    <section aria-labelledby="sheet-measured"><h2 id="sheet-measured">03 / Measured</h2>{report.readings.length === 0 ? <p>No measurement recorded.</p> : report.readings.map(reading => <div key={reading.id}><p><strong>{reading.designId}</strong> · {reading.presetVersion} · load at {reading.appliedLoad.nodeId} ({reading.appliedLoad.fxN}, {reading.appliedLoad.fyN}) N · measured joint {reading.measuredNodeId}: <strong>{reading.displacement} {reading.units}</strong> · {reading.method}.</p><p>Resolution: {reading.instrumentResolution === null ? 'unknown' : `${reading.instrumentResolution} ${reading.units}`}. Raw readings: {reading.rawReadings.length ? `${reading.rawReadings.join(', ')} ${reading.units}` : 'none'}. Entered assessment: {reading.assessment}; this does not establish model validation. {reading.notes}</p></div>)}</section>
+    <section aria-labelledby="sheet-measured"><h2 id="sheet-measured">03 / Measured</h2>{report.readings.length === 0 ? <p>No measurement recorded.</p> : report.readings.map(reading => {
+      const target = physicalCases.find(item => matchesReading(reading, item))!;
+      const assessment = assessReading(reading, target);
+      return <div className="sheet-reading" key={reading.id}><p><strong>{target.label} · joint {reading.measuredNodeId}: {reading.displacement.toPrecision(6)} {reading.units} mean</strong> (downward positive). Load ({reading.appliedLoad.fxN}, {reading.appliedLoad.fyN}) N at {reading.appliedLoad.nodeId} · {reading.method}.</p><p>Raw: {reading.rawReadings.length ? `${reading.rawReadings.join(', ')} ${reading.units}` : 'none'}. Resolution: {reading.instrumentResolution === null ? 'unknown' : `${reading.instrumentResolution} ${reading.units}`}. {reading.notes}</p><p><strong>{assessment.status === 'inconclusive' ? 'Inconclusive for the predicted change.' : 'Model agreement unassessed.'}</strong> {assessment.reasons.join(' ')}</p></div>;
+    })}</section>
     <section aria-labelledby="sheet-costs"><h2 id="sheet-costs">04 / Cost comparison</h2><p><strong>Scenario C · Independent planning packages.</strong> Common scope: {quotes.packages[0].scope}</p><p>Budget <strong>{money(quotes.budgetUsd)}</strong> · {quotes.years} years · {quotes.realRate * 100}% real annual rate · real USD.</p>
       <table className="sheet-cost-table"><caption className="sr-only">Captured package inputs and calculated costs in USD</caption><thead><tr><th scope="col">Amount / source</th>{quotes.packages.map(pkg => <th scope="col" key={pkg.id}>{pkg.label}</th>)}</tr></thead><tbody>{costRows}{costs.status === 'ok' && ([['upfront', 'Upfront cost'], ['fundingGap', 'Funding gap today'], ['presentCost', 'Discounted total']] as const).map(([key, label]) => <tr className="sheet-total" key={key}><th scope="row">{label}</th>{costs.packages.map(pkg => <td key={pkg.packageId}>{amountText(pkg[key])}</td>)}</tr>)}</tbody></table>
       <div className="sheet-sources">{sources.map((source, i) => <p key={i}>[{i + 1}] <strong>{sourceName(source)}:</strong> {source.label}</p>)}</div>

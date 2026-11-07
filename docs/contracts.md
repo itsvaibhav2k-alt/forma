@@ -66,7 +66,8 @@ Integration owns the only `ExperimentState` and reducer. Studio receives state
 and callbacks, never a competing trial store. The community contracts keep
 financial inputs/readings separate. Phase 4 uses an app-mounted `useQuotes` hook
 for editable draft strings and derived `QuoteInputs`/`CostResult`; it never sends
-financial changes through the experiment reducer. Reading events await later work.
+financial changes through the experiment reducer. Phase 7 uses a separate app-mounted
+`useMeasurements` store for readings and per-case drafts; it sends no experiment events.
 
 | Event | Required reducer behavior in Phase 3 |
 | --- | --- |
@@ -128,6 +129,23 @@ method and raw repeat readings. Resolution is recorded in the same units or is
 explicitly unknown (`null`). Its assessment must not imply model validation merely
 because a number was entered. The report builder must check case association.
 
+Phase 7 entry requires 1–20 finite raw vertical readings, a method and physical
+conditions. Positive means downward; the stored displacement equals their mean.
+Units remain as entered (mm, cm or in); comparison alone converts to mm. Drafts
+are keyed by design ID, preset version and exact load vector/location. Changing
+the measured joint clears unsaved readings and resolution. Unit changes reinterpret
+the draft and are explicitly labeled; saved observations are never converted.
+
+The resolution screen compares instrument resolution and repeat range to the
+stored model's absolute brace-induced vertical change at the measured joint. An
+unresolvable change is inconclusive. Unknown resolution or fewer than three repeats
+cannot support agreement. Even fine resolution and small spread leave agreement
+unassessed: paired physical tests, systematic error and uncertainty need review.
+The builder derives assessment again and cannot accept a caller's `resolved` flag
+as proof. The existing enum remains compatible; the new UI never emits `resolved`.
+Legacy internal records with no raw readings remain unassessed/inconclusive;
+the entry form always requires raw readings. No public JSON import is provided.
+
 `ReportInputs` explicitly provides trial, optional retest, selected quote inputs
 and results, readings and assumptions. `ReportPayload` adds schema version, report
 ID and supplied canonical ISO timestamp. The builder checks quote/result
@@ -147,7 +165,19 @@ The print view receives only a frozen `ReportPayload` and never reads global sta
 Navigating, changing costs and selecting another trial do not change it. A new
 capture explicitly replaces the sheet. The JSON download preserves the full
 payload, including readings, all candidates and source precision. The optional
-measurement-entry UI and durable/imported reports remain outside this phase.
+measurement-entry UI is implemented in Phase 7; durable/imported reports remain outside scope.
+
+Matching readings are included only for the saved trial's original/chosen designs
+and the explicitly included retest. Identity is design/version/load, not trial ID;
+identical cases can reuse the same observation. Other cases stay in the session
+store and are excluded with a visible count. A report freezes raw readings, units,
+method, conditions, resolution and derived assessment along with other inputs.
+
+`buildAssemblyPattern` freezes geometry from the selected stored original/chosen
+design. It uses the fixed 240 × 40 mm preset, calculates center-to-center lengths
+and unconnected crossings, and never solves again. The separate SVG uses 254 ×
+100 mm dimensions with a matching viewBox, so one drawing unit equals one mm.
+Neither screen preflight nor SVG dimensions certify physical printer scale.
 
 ## Dependency rules
 

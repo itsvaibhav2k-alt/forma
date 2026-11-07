@@ -3,7 +3,7 @@
 A local browser workbench for a one-brace truss experiment, an independent package
 cost comparison, and a selected-trial decision sheet.
 
-**Phases 1–5 are implemented; Phase 6 release tooling is ready.** Native PDF and
+**Phases 1–5 and optional Phase 7 are implemented; Phase 6 release tooling is ready.** Native PDF and
 presentation-laptop acceptance remain manual handoffs. Choose a load position and brace, commit your
 prediction, then compare all four placements using the tested structural engine.
 Drag the load or use the keyboard to retest the same brace. Saved trials preserve
@@ -31,7 +31,7 @@ port is strict so a collision is reported rather than silently changing the URL.
 npm run check     # tests, strict TypeScript checking, production build
 npm run test:watch
 npm run bench:structures  # five-design calculation timing, no browser UI
-npm run prepare:report-qa # prepares three frozen HTML/JSON cases for manual PDF checks
+npm run prepare:report-qa # prepares four frozen HTML/JSON cases for manual PDF checks
 npm run test:release:network # optional real-loopback launcher checks; requires port permission
 npm run release:prepare # checks, builds, benchmarks and packages a portable candidate
 npm run release:verify  # verifies the latest candidate, or append -- /path/to/extracted/folder
@@ -42,7 +42,7 @@ npm start        # serves dist at http://127.0.0.1:4173
 The production build uses local assets and system fonts. Once dependencies are
 installed and `dist` is built, the local server can serve the experiment without
 an internet connection. The full offline judging/printing release gate belongs to
-Phase 6. Reloading clears session-only trials, quote inputs and captured sheets. No database, remote service, or
+Phase 6. Reloading clears session-only trials, quote inputs, measurements and captures. No database, remote service, or
 account is required.
 
 ## Try the experiment
@@ -89,10 +89,29 @@ planning inputs, not prices inferred from the tabletop bridge.
    **Capture new sheet** from the workbench to explicitly replace it.
 
 The sheet uses the stored analysis without solving again. It freezes costs,
-sources, assumptions and readings too; measurement entry remains optional later
-work. Long content is preserved, and the print button is disabled when the screen
+sources, assumptions and matching readings too. Long content is preserved, and the print button is disabled when the screen
 layout exceeds the one-page allowance. Shorten notes and recapture, or download
 the complete JSON snapshot. This download is archival; importing it is not implemented.
+
+## Record physical evidence or print a pattern
+
+After committing a trial, open **Physical evidence**. Choose the original or braced
+design at the saved load (or current retest), measured joint and units. Enter raw
+repeat readings, instrument resolution, method and physical conditions, then save.
+Vertical readings are downward-positive; the recorded value is their mean. Blank
+resolution stays unknown. The app marks insufficient resolution or large repeat
+spread inconclusive and never automatically claims agreement with the ideal model.
+
+Only readings matching the captured design/version/load enter a decision sheet;
+retest readings require **Include the current retest**. Later reading edits/removal
+do not change an existing capture. Drafts and readings last only for this session.
+
+Choose **Original assembly template** or **Braced assembly template** for a separate
+undeformed, 1:1 side-panel pattern with member lengths and an SVG download. Print
+on **US Letter landscape, 100% / actual size**, with fit-to-page and browser headers/
+footers off. Check the actual paper's 100 mm bar with a ruler before use. This is
+separate from the portrait decision sheet; its sketches are magnified and cannot
+serve as assembly patterns. See the [physical checklist](docs/physical-checklist.md).
 
 ## Handoff documents
 
@@ -105,6 +124,7 @@ the complete JSON snapshot. This download is archival; importing it is not imple
 - [Phase 4 acceptance and handoff](docs/phase-4.md): cost formulas, inputs, validation, domain isolation and report snapshot adapter.
 - [Phase 5 acceptance and handoff](docs/phase-5.md): frozen reports, print layout, export checks and the manual PDF checklist.
 - [Phase 6 release record](docs/phase-6.md): measured evidence, portable packaging and pending release gates.
+- [Phase 7 implementation](docs/phase-7.md): measurements, uncertainty screening, separate assembly patterns and verification.
 - [Presentation-laptop checklist](docs/release-checklist.md) and [90-second demo script](docs/demo-script.md).
 - [Ownership and merge order](docs/merge-plan.md): the next independent work streams.
 - [Full phased plan](output/pdf/Forma_Phased_Build_and_Design_Review.pdf): the planning PDF.
