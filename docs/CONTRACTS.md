@@ -1,6 +1,7 @@
 # Forma foundation contract — frozen v1
 
-Status: foundation implemented; runtime engines and judge-facing components are not implemented yet.
+Status: frozen v1 interfaces; foundation and Astra runtime engines implemented.
+Judge-facing components and browser/print integration await Claude’s presentation checkpoint.
 Approved by Vaibhav on November 7, 2026. Both lanes
 must start from the same reviewed foundation commit. Foundation commit and integration into main were explicitly approved. Subsequent contract
 changes require Vaibhav's approval.
@@ -29,7 +30,7 @@ Available now:
 - `TRIANGLE_EXPECTED`, `BRIDGE_EXPECTED`, `FINANCE_EXPECTED`: labeled analytic/brief
   acceptance references only. These are not computed results and must not feed runtime UI.
 
-The following imports are reserved for the engine checkpoint and **do not exist yet**:
+The engine checkpoint implements the following imports (paths shown from `src/app/`):
 
 ```ts
 import { analyze, rankBraces } from '../structures';
@@ -37,8 +38,11 @@ import { compareQuotes } from '../community/finance';
 import { commitPrediction, createTrialState, transitionTrial } from '../trials';
 ```
 
-Until those modules exist, use the pending view model and draft fixture. Do not import
-nonexistent functions, create duplicate engines, or show reference values as live results.
+Use these engines for computed output; never show reference fixture values as live results.
+The pending fixture remains available for explicit unavailable-engine UI tests. In the real app,
+`src/app/useAppController.ts` exports `useAppController()`, returning `studio`, `community`,
+and `decisionSheet` props matching the three frozen component interfaces. The hook uses the
+actual engines and independent state update branches. No public contract shape has changed.
 
 ## Coordinates, stock and preset
 
@@ -279,8 +283,8 @@ Browser end-to-end setup and checks are added during integration; installing Pla
 package does not assert that its browsers or any end-to-end checks have run.
 
 Foundation tests verify canonical fixture topology/units, source labels, snapshot isolation,
-and type boundaries. They **do not validate a solver or a financial engine that does not yet exist**.
-Subsequent engine gates are the original analytic triangle (1% tolerance), unstable square,
+and type boundaries. They do not, by themselves, validate the engines. The engine checkpoint adds dedicated
+structural, financial, trial and real-engine React controller suites. Engine gates are the original analytic triangle (1% tolerance), unstable square,
 all four brace alternatives at all three load joints, signs/reactions, symmetry/ties, and zero
 baseline behavior. Finance gates use the original 3%/0% examples, break-even equality,
 unknown inputs, invalid horizons/rates, and budget isolation. Trial gates verify immutable
