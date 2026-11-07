@@ -13,6 +13,7 @@ interface ExperimentProps {
   trial: Trial | undefined;
   trials: readonly Trial[];
   isRetest: boolean;
+  projectStorage?: boolean;
   onLoadChange: (id: LoadNodeId) => void;
   onPanelChange: (id: PanelId) => void;
   onCommit: () => void;
@@ -20,7 +21,7 @@ interface ExperimentProps {
   onSelectTrial: (id: string) => void;
 }
 
-export function Experiment({ baseline, load, panelId, results, error, trial, trials, isRetest, onLoadChange, onPanelChange, onCommit, onStart, onSelectTrial }: ExperimentProps) {
+export function Experiment({ baseline, load, panelId, results, error, trial, trials, isRetest, projectStorage, onLoadChange, onPanelChange, onCommit, onStart, onSelectTrial }: ExperimentProps) {
   const [comparison, setComparison] = useState<'both' | 'original' | 'modified'>('both');
   const [showDeformation, setShowDeformation] = useState(true);
   const [showForces, setShowForces] = useState(false);
@@ -71,7 +72,7 @@ export function Experiment({ baseline, load, panelId, results, error, trial, tri
 
     {trial && <section className="saved-prediction" aria-labelledby="saved-heading"><div><p className="eyebrow">ORIGINAL COMMIT · TRIAL {String(trialNumber).padStart(2, '0')}</p><h2 id="saved-heading">Saved prediction: {trial.chosenPanelId} at {trial.load.nodeId}</h2><p>{formatMm(trial.results.baseline.analysis.loadedJointDisplacementMm)} → {formatMm(trial.results.candidates[trial.chosenPanelId].analysis.loadedJointDisplacementMm)} mm · {formatChange(trial.results.candidates[trial.chosenPanelId].change)} reduction</p><p className="saved-note">This first result stays fixed while you retest.</p></div><button className="outline-button" type="button" onClick={() => onSelectTrial(trial.id)}>Show saved result</button></section>}
 
-    <section className="trial-history" aria-labelledby="history-heading"><div className="section-heading"><h2 id="history-heading">Your trials <span>{trials.length.toString().padStart(2, '0')}</span></h2><p>Saved for this session · Reloading clears history</p></div>
+    <section className="trial-history" aria-labelledby="history-heading"><div className="section-heading"><h2 id="history-heading">Your trials <span>{trials.length.toString().padStart(2, '0')}</span></h2><p>{projectStorage ? 'Save a project once; further edits autosave' : 'Saved for this session · Reloading clears history'}</p></div>
       {trials.length === 0 ? <p className="history-empty">Your first committed prediction will appear here.</p> : <ol>{trials.map((item, index) => <li key={item.id}><button type="button" aria-label={`Trial ${String(index + 1).padStart(2, '0')} · Load ${item.load.nodeId} · Brace ${item.chosenPanelId} · ${formatChange(item.results.candidates[item.chosenPanelId].change)} reduction`} aria-pressed={trial?.id === item.id} onClick={() => onSelectTrial(item.id)}><span className="trial-number">Trial {String(index + 1).padStart(2, '0')}</span><strong>{item.load.nodeId} / {item.chosenPanelId}</strong><span>{formatChange(item.results.candidates[item.chosenPanelId].change)} reduction</span><span className="history-action">{trial?.id === item.id ? 'Selected' : 'View trial'} ↗</span></button></li>)}</ol>}
     </section>
     <details className="model-assumptions"><summary>Model and drawing assumptions</summary><p>One planar truss side, ideal pin joints, linear elastic members and small displacements. Only labeled nodes are joints; crossed diagonals are unconnected. E = 10,000 N/mm²; A = 10 mm². Deflection means absolute vertical movement at the loaded joint.</p><p>This tabletop model excludes joint slip, bending, buckling and out-of-plane motion. It does not predict failure load. Magnified deformation is illustrative; numerical results retain their actual units.</p></details>

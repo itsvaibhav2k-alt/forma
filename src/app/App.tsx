@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import type { Workspace } from '../projects/workspace';
 import type { RankBraces, ReportPayload } from '../shared';
 import { rankBraces } from '../structures';
 import { Experiment } from '../studio';
@@ -23,15 +24,20 @@ const viewCopy: Record<View, readonly [string, string]> = {
   template: ['A pattern for one side.', 'Use the captured geometry at actual size, with a printer scale check before assembly.'],
 };
 
-export function App({ ranker = rankBraces }: { ranker?: RankBraces } = {}) {
+export function App({ ranker = rankBraces, initialWorkspace, onWorkspaceChange, projectPanel }: { ranker?: RankBraces; initialWorkspace?: Workspace; onWorkspaceChange?: (workspace: Workspace) => void; projectPanel?: ReactNode } = {}) {
   const [view, setView] = useState<View>('experiment');
-  const experiment = useExperiment(ranker);
+  const experiment = useExperiment(ranker, initialWorkspace?.experiment);
   const display = experimentDisplay(experiment.state);
-  const quotes = useQuotes();
-  const measurements = useMeasurements();
-  const [pattern, setPattern] = useState<AssemblyPattern | null>(null);
-  const [report, setReport] = useState<ReportPayload | null>(null);
-  const [includeRetest, setIncludeRetest] = useState(false);
+  const quotes = useQuotes(initialWorkspace?.quotes);
+  const measurements = useMeasurements(initialWorkspace?.measurements);
+  const [pattern, setPattern] = useState<AssemblyPattern | null>(initialWorkspace?.pattern ?? null);
+  const [report, setReport] = useState<ReportPayload | null>(initialWorkspace?.report ?? null);
+  const [includeRetest, setIncludeRetest] = useState(initialWorkspace?.includeRetest ?? false);
+  useEffect(() => {
+    onWorkspaceChange?.({ schemaVersion: 1, experiment: experiment.state, quotes: quotes.draft,
+      measurements: { readings: measurements.readings, drafts: measurements.drafts, selectedKey: measurements.selectedKey },
+      report, pattern, includeRetest });
+  }, [onWorkspaceChange, experiment.state, quotes.draft, measurements.readings, measurements.drafts, measurements.selectedKey, report, pattern, includeRetest]);
   const [reportError, setReportError] = useState('');
   const canCapture = !!display.trial && quotes.result.status === 'ok';
   const activeRetest = experiment.state.retest.status === 'ready' ? experiment.state.retest.value : null;
@@ -72,6 +78,8 @@ export function App({ ranker = rankBraces }: { ranker?: RankBraces } = {}) {
         <span className="preview-label"><span aria-hidden="true" />Interactive experiment</span>
       </header>
 
+      {projectPanel}
+
       <main id="workspace" tabIndex={-1}>
         <div className="page-heading">
           <p className="eyebrow">A SMALL EXPERIMENT. A CLEARER DECISION.</p>
@@ -79,13 +87,13 @@ export function App({ ranker = rankBraces }: { ranker?: RankBraces } = {}) {
           <p className="intro">{viewCopy[view][1]}</p>
         </div>
 
-        {view === 'experiment' ? <Experiment baseline={experiment.baseline} {...display}
+        {view === 'experiment' ? <Experiment baseline={experiment.baseline} {...display} projectStorage={!!onWorkspaceChange}
           trials={experiment.state.trials} isRetest={experiment.state.retest.status !== 'idle'}
           onLoadChange={experiment.moveLoad} onPanelChange={panelId => experiment.dispatch({ type: 'prediction/select-panel', panelId })}
           onCommit={experiment.commit} onStart={experiment.startRound}
           onSelectTrial={trialId => experiment.dispatch({ type: 'trial/select', trialId })} />
           : view === 'costs' ? <CostWorkbench {...quotes} />
-          : view === 'measurements' ? <MeasurementWorkbench cases={cases} {...measurements} />
+          : view === 'measurements' ? <MeasurementWorkbench cases={cases} {...measurements} projectStorage={!!onWorkspaceChange} />
           : view === 'template' ? pattern && <AssemblyTemplate pattern={pattern} />
           : report && <ReportPreview report={report} />}
 
@@ -111,7 +119,7 @@ export function App({ ranker = rankBraces }: { ranker?: RankBraces } = {}) {
 
       <footer className="site-footer">
         <span>Forma / NOVA 2026</span>
-        <span>Ideal truss model · Independent cost comparison · Session-only data</span>
+        <span>Ideal truss model · Independent cost comparison · {projectPanel ? 'Check project status before closing' : 'Session-only data'}</span>
       </footer>
     </div>
   );

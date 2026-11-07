@@ -1,0 +1,23 @@
+.project-bar { margin:20px 0 30px; padding:18px 22px; border:1px solid #d8ded4; border-radius:12px; background:#eef1e9; color:#26372d; }
+.project-summary,.project-account,.project-list-heading { display:flex; gap:20px; align-items:center; justify-content:space-between; }
+.save-state { display:block; margin-top:5px; color:#596958; font-size:13px; }
+.project-panel { border-top:1px solid #d8ded4; padding-top:20px; margin-top:18px; }
+.project-panel h3 { font-size:18px; margin:8px 0 14px; }
+.project-panel p,.project-confirm p { font-size:14px; line-height:1.6; }
+.project-panel label { display:grid; gap:8px; font-size:14px; font-weight:600; }
+.project-panel input { width:100%; min-height:44px; border:1px solid #b7c2b3; padding:10px 12px; border-radius:6px; font:inherit; color:#26372d; background:white; }
+.project-name { max-width:580px; margin:16px 0; }
+.account-form { max-width:580px; display:grid; gap:16px; }
+.project-buttons { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.project-buttons .primary-button { width:auto; min-width:150px; }
+.project-summary>div { min-width:0; overflow-wrap:anywhere; }
+.project-bar .text-button { background:none; border:none; text-decoration:underline; color:#355d49; cursor:pointer; padding:12px; font:inherit; font-size:14px; }
+.project-help { max-width:760px; margin:14px 0 20px; }
+.project-list { list-style:none; padding:0; margin:0; }
+.project-list li { display:flex; justify-content:space-between; align-items:center; gap:20px; border-top:1px solid #d8ded4; padding:14px 0; }
+.project-list li>div { min-width:0; overflow-wrap:anywhere; }
+.project-list span { display:block; font-size:12px; margin-top:6px; color:#596958; }
+.project-error,.project-confirm { background:#fff5e8; border:1px solid #a97f50; padding:14px; margin-top:16px; border-radius:6px; }
+.project-bar button:focus-visible,.project-bar input:focus-visible { outline:3px solid #557744; outline-offset:3px; }
+@media(max-width:740px) { .project-bar { padding:16px; } .project-summary,.project-account,.project-list li { align-items:stretch; flex-direction:column; gap:12px; } .project-panel input { font-size:16px; } .project-buttons>button { flex:1 1 140px; } }
+@media print { .project-bar { display:none!important; } }

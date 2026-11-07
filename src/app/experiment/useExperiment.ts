@@ -1,11 +1,11 @@
 import { useReducer, useState } from 'react';
-import type { LoadNodeId, RankBraces } from '../../shared';
+import type { ExperimentState, LoadNodeId, RankBraces } from '../../shared';
 import { createBridgePreset } from '../../structures';
 import { createExperimentState, DEFAULT_LOAD, experimentReducer, selectedTrial } from './state';
 
-export function useExperiment(ranker: RankBraces) {
+export function useExperiment(ranker: RankBraces, initial?: ExperimentState) {
   const [baseline] = useState(createBridgePreset);
-  const [state, dispatch] = useReducer(experimentReducer, undefined, () => createExperimentState(crypto.randomUUID()));
+  const [state, dispatch] = useReducer(experimentReducer, initial, value => value ?? createExperimentState(crypto.randomUUID()));
   function commit() {
     if (state.round.phase === 'revealed' || !state.round.panelId) return;
     const results = ranker(baseline, state.round.load);

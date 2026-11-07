@@ -14,6 +14,14 @@ gaps, discounted totals and a break-even upkeep threshold. Capture an immutable
 decision sheet, print/save it as PDF, or download the full snapshot as JSON.
 No fixture numbers are used as calculated results.
 
+**Product backend feature 1 is implemented:** email/password accounts and
+private, persistent projects. Open **Projects & account**, name the workspace and
+choose **Save project** once. Further edits autosave after a short pause, with
+visible save status and conflict protection; after reloading, reopen the project
+from your list. This supports local or hosted Supabase; the development checkout
+is now connected to the hosted Forma project. See the
+[setup and feature boundaries](docs/backend-feature-1.md).
+
 ## Run locally
 
 Use the version in `.nvmrc` (`20.20.2`) or a compatible Node version declared in
@@ -42,8 +50,9 @@ npm start        # serves dist at http://127.0.0.1:4173
 The production build uses local assets and system fonts. Once dependencies are
 installed and `dist` is built, the local server can serve the experiment without
 an internet connection. The full offline judging/printing release gate belongs to
-Phase 6. Reloading clears session-only trials, quote inputs, measurements and captures. No database, remote service, or
-account is required.
+Phase 6. Without backend configuration, reloading clears session-only trials, quote
+inputs, measurements and captures; no account is required for that mode. With
+Supabase configured, explicitly saved projects can be reopened after reload.
 
 ## Try the experiment
 
@@ -104,7 +113,9 @@ spread inconclusive and never automatically claims agreement with the ideal mode
 
 Only readings matching the captured design/version/load enter a decision sheet;
 retest readings require **Include the current retest**. Later reading edits/removal
-do not change an existing capture. Drafts and readings last only for this session.
+do not change an existing capture. Drafts and readings are retained between visits
+once you save a project; subsequent edits autosave. Unsaved workspaces last only
+for this session.
 
 Choose **Original assembly template** or **Braced assembly template** for a separate
 undeformed, 1:1 side-panel pattern with member lengths and an SVG download. Print
@@ -125,6 +136,7 @@ serve as assembly patterns. See the [physical checklist](docs/physical-checklist
 - [Phase 5 acceptance and handoff](docs/phase-5.md): frozen reports, print layout, export checks and the manual PDF checklist.
 - [Phase 6 release record](docs/phase-6.md): measured evidence, portable packaging and pending release gates.
 - [Phase 7 implementation](docs/phase-7.md): measurements, uncertainty screening, separate assembly patterns and verification.
+- [Backend feature 1](docs/backend-feature-1.md): accounts, private projects, autosave, local/hosted setup and validation.
 - [Presentation-laptop checklist](docs/release-checklist.md) and [90-second demo script](docs/demo-script.md).
 - [Ownership and merge order](docs/merge-plan.md): the next independent work streams.
 - [Full phased plan](output/pdf/Forma_Phased_Build_and_Design_Review.pdf): the planning PDF.
