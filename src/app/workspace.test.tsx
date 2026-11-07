@@ -12,7 +12,7 @@ it('uses one viewport and preserves the draft, committed brace and retest across
   const { container } = render(<App ranker={ranker} />);
   const switchTo = (name: string) => user.click(screen.getByRole('button', { name }));
   await switchTo('Assembly');
-  expect(container.querySelectorAll('.viewport-card svg')).toHaveLength(1);
+  expect(container.querySelectorAll('.viewport-card .model-view-svg, .viewport-card .bridge-svg')).toHaveLength(1);
   expect(screen.queryByRole('slider')).toBeNull();
   await user.click(screen.getByRole('radio', { name: 'P2' }));
   await user.click(screen.getByRole('radio', { name: 'B3 Right' }));
@@ -20,7 +20,7 @@ it('uses one viewport and preserves the draft, committed brace and retest across
   expect(screen.getByText('Results hidden')).toBeVisible();
   expect(ranker).not.toHaveBeenCalled();
   await switchTo('Structural');
-  expect(container.querySelectorAll('.viewport-card svg')).toHaveLength(1);
+  expect(container.querySelectorAll('.viewport-card .model-view-svg, .viewport-card .bridge-svg')).toHaveLength(1);
   expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', '3');
   expect(screen.getByRole('radio', { name: 'P2' })).toBeChecked();
   await switchTo('Assembly');
@@ -57,10 +57,11 @@ it('keeps overlay preferences separate from representation and clears all active
   await user.click(screen.getByRole('button', { name: 'Start another prediction' }));
   expect(screen.getByText('Results hidden')).toBeVisible();
   expect(container.querySelector('.workspace-grid')).not.toHaveTextContent(/0\.043702|26\.34|tension|compression/);
-  expect(container.querySelector('[data-overlay]')).toBeNull();
+  expect(container.querySelector('[data-analysis-trace], [data-overlay="member-probe"]')).toBeNull();
   expect(container.querySelector('.tension, .compression')).toBeNull();
   await user.click(screen.getByRole('radio', { name: 'P4' }));
-  expect(container.querySelector('.preview-brace')).not.toBeNull();
+  expect(container.querySelector('.bridge-svg')).toHaveTextContent('10 joints / 18 members');
+  expect(screen.getByRole('radio', { name: 'P4' })).toBeChecked();
   await user.click(screen.getByRole('button', { name: 'Assembly' }));
   expect(screen.getByRole('img', { name: /Load at B1, brace in P4/ })).toBeVisible();
   expect(container.querySelector('.workspace-grid')).not.toHaveTextContent(/0\.043702|26\.34/);

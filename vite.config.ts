@@ -6,6 +6,8 @@ export default defineConfig({
   server: { host: '127.0.0.1', strictPort: true },
   preview: { host: '127.0.0.1', strictPort: true },
   test: {
+    // Bound concurrent DOM renderers so geometry-heavy UI checks stay deterministic.
+    maxWorkers: 4,
     include: ['src/**/*.test.{ts,tsx}'],
     environment: 'node',
     setupFiles: ['./src/test/setup.ts'],

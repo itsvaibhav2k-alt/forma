@@ -19,7 +19,7 @@ it('keeps the workbench clear and makes the experiment guide available on demand
   await user.click(screen.getByRole('button', { name: 'Commit prediction' }));
   await user.click(screen.getByText('How this works'));
   expect(screen.getByText('How this works').closest('details')).not.toHaveAttribute('open');
-  await user.click(screen.getByRole('button', { name: 'Compare build options' }));
+  await user.click(screen.getByRole('button', { name: 'Build costs' }));
   expect(screen.getByText('How this works').closest('details')).not.toHaveAttribute('open');
   expect(screen.getByText('Blank versus zero')).toBeInTheDocument();
 });

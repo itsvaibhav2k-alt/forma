@@ -1,121 +1,113 @@
-import { useId, useRef, type KeyboardEvent, type PointerEvent } from 'react';
-import { LOAD_NODE_IDS, PANEL_IDS, type Analysis, type Design, type LoadNodeId, type Member, type PanelId, type RankedBraces } from '../shared';
-import { formatForce } from './format';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { LOAD_NODE_IDS, PANEL_IDS, type Analysis, type Design, type LoadNodeId, type PanelId, type RankedBraces } from '../shared';
 import { createBraceMember } from '../structures';
+import { renderPlanarV4, type PlanarSolution } from './v9Planar.js';
 
-export const DEFORMATION_SCALE = 200;
-const PIXELS_PER_MM = 2.25;
-const screenX = (x: number) => 70 + x * PIXELS_PER_MM;
-const screenY = (y: number) => 190 - y * PIXELS_PER_MM;
+export const DEFORMATION_SCALE = 250;
 const LOAD_X = [205, 340, 475] as const;
-
 export function snapLoadAtSvgX(x: number): LoadNodeId {
   const index = LOAD_X.reduce((nearest, value, i) => Math.abs(x - value) < Math.abs(x - LOAD_X[nearest]!) ? i : nearest, 0);
   return LOAD_NODE_IDS[index]!;
 }
-
 export interface BridgeCanvasProps {
-  baseline: Design;
-  loadNodeId: LoadNodeId;
-  panelId: PanelId | null;
-  results: RankedBraces | null;
-  comparison: 'both' | 'original' | 'modified';
-  showDeformation: boolean;
-  showForces: boolean;
-  locked: boolean;
-  readOnly?: boolean;
-  onLoadChange: (id: LoadNodeId) => void;
-  onPanelChange: (id: PanelId) => void;
-  selectedMemberId?: string | null;
-  onSelectMember?: (id: string) => void;
+  baseline: Design; loadNodeId: LoadNodeId; panelId: PanelId | null; results: RankedBraces | null;
+  comparison: 'both' | 'original' | 'modified'; showDeformation: boolean; showForces: boolean;
+  locked: boolean; readOnly?: boolean; onLoadChange: (id: LoadNodeId) => void;
+  onPanelChange: (id: PanelId) => void; selectedMemberId?: string | null; onSelectMember?: (id: string) => void;
+}
+
+/** Adapt real application geometry/results; the reference renderer contains no solver. */
+export function toPlanarSolution(design: Design, analysis?: Analysis): PlanarSolution {
+  const nodes = [...design.nodes].sort((a, b) => {
+    const index = (id: string) => Number(id.slice(1)) + (id.startsWith('T') ? 5 : 0);
+    return index(a.id) - index(b.id);
+  });
+  return {
+    nodes: nodes.map(node => ({ id: node.id, x: node.xMm, y: node.yMm, ux: analysis?.displacementMmByNode[node.id]?.x ?? 0, uy: analysis?.displacementMmByNode[node.id]?.y ?? 0 })),
+    members: design.members.map(member => ({ id: member.id, a: nodes.findIndex(node => node.id === member.startNodeId), b: nodes.findIndex(node => node.id === member.endNodeId), extra: member.id.startsWith('brace-'), force: analysis?.axialForceNByMember[member.id] ?? 0 })),
+    reactions: Object.fromEntries(Object.entries(analysis?.reactionNByNode ?? { B0: { x: 0, y: 0 }, B4: { x: 0, y: 0 } })),
+  };
 }
 
 export function BridgeCanvas({ baseline, loadNodeId, panelId, results, comparison, showDeformation, showForces, locked, readOnly = false, onLoadChange, onPanelChange, selectedMemberId, onSelectMember }: BridgeCanvasProps) {
-  const titleId = useId();
-  const descriptionId = useId();
+  const sceneRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
-  const dragging = useRef<number | null>(null);
-  const lastSnap = useRef(loadNodeId);
-  const nodes = new Map(baseline.nodes.map(node => [node.id, node]));
-  const candidate = panelId && results ? results.candidates[panelId] : null;
-  const forceAnalysis = comparison === 'original' ? results?.baseline.analysis : candidate?.analysis;
-  const loadX = LOAD_X[LOAD_NODE_IDS.indexOf(loadNodeId)]!;
-
-  function movePointer(event: PointerEvent<SVGGElement>) {
-    if (readOnly) return;
-    const transform = svgRef.current?.getScreenCTM();
-    if (!transform) return;
-    const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(transform.inverse());
-    const snapped = snapLoadAtSvgX(point.x);
-    if (lastSnap.current !== snapped) {
-      lastSnap.current = snapped;
-      onLoadChange(snapped);
+  const [size, setSize] = useState({ width: 680, height: 600 });
+  const [camera, setCamera] = useState({ zoom: 1, panX: 0, panY: 0 });
+  useLayoutEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene || typeof ResizeObserver === 'undefined') return;
+    const update = () => { const bounds = scene.getBoundingClientRect(); if (bounds.width > 0 && bounds.height > 0) setSize({ width: Math.round(bounds.width), height: Math.round(bounds.height) }); };
+    const observer = new ResizeObserver(update); observer.observe(scene); update();
+    return () => observer.disconnect();
+  }, []);
+  useLayoutEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+    const zoomAt = (factor: number, clientX: number, clientY: number) => {
+      const bounds = scene.getBoundingClientRect();
+      const px = clientX - bounds.left, py = clientY - bounds.top;
+      const ox = bounds.width / 2, oy = (bounds.height - Math.min(30, bounds.height * .12)) / 2 + 1;
+      setCamera(current => { const zoom = Math.max(.45, Math.min(4.5, current.zoom * factor)); const ratio = zoom / current.zoom; return { zoom, panX: px - ox - (px - ox - current.panX) * ratio, panY: py - oy - (py - oy - current.panY) * ratio }; });
+    };
+    const wheel = (event: WheelEvent) => { event.preventDefault(); zoomAt(Math.exp(-event.deltaY * (event.ctrlKey ? .008 : .0015)), event.clientX, event.clientY); };
+    const touches = new Map<number, { x: number; y: number }>(); let distance = 0;
+    const down = (event: PointerEvent) => { if (event.pointerType === 'touch') { touches.set(event.pointerId, { x: event.clientX, y: event.clientY }); if (touches.size === 2) { const [a, b] = [...touches.values()]; distance = Math.hypot(a!.x - b!.x, a!.y - b!.y); } } };
+    const move = (event: PointerEvent) => { if (!touches.has(event.pointerId)) return; touches.set(event.pointerId, { x: event.clientX, y: event.clientY }); if (touches.size === 2) { event.preventDefault(); const [a, b] = [...touches.values()]; const next = Math.hypot(a!.x - b!.x, a!.y - b!.y); if (distance > 0) zoomAt(next / distance, (a!.x + b!.x) / 2, (a!.y + b!.y) / 2); distance = next; } };
+    const up = (event: PointerEvent) => { touches.delete(event.pointerId); distance = 0; };
+    scene.addEventListener('wheel', wheel, { passive: false }); scene.addEventListener('pointerdown', down); scene.addEventListener('pointermove', move, { passive: false }); scene.addEventListener('pointerup', up); scene.addEventListener('pointercancel', up);
+    return () => { scene.removeEventListener('wheel', wheel); scene.removeEventListener('pointerdown', down); scene.removeEventListener('pointermove', move); scene.removeEventListener('pointerup', up); scene.removeEventListener('pointercancel', up); };
+  }, []);
+  useLayoutEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const focused = document.activeElement;
+    const restoreLoadFocus = focused?.hasAttribute('data-planar-load');
+    const restoreMemberFocus = focused instanceof Element ? focused.getAttribute('data-member-id') : null;
+    const original = toPlanarSolution(baseline, results?.baseline.analysis);
+    const candidate = panelId && results ? results.candidates[panelId] : null;
+    const modified = comparison === 'original' && showForces ? original : candidate ? toPlanarSolution(candidate.design, candidate.analysis) : toPlanarSolution({ ...baseline, members: [...baseline.members, ...(panelId ? [createBraceMember(panelId)] : [])] });
+    const selected = modified.members.find(member => member.id === selectedMemberId);
+    const pickMember = (key: string) => { const member = modified.members.find(item => `${item.a}-${item.b}` === key); if (member) onSelectMember?.(member.id); };
+    renderPlanarV4(svg, {
+      ...size, load: LOAD_NODE_IDS.indexOf(loadNodeId) + 1, brace: panelId ? PANEL_IDS.indexOf(panelId) + 1 : 0,
+      locked: !!results, layer: results ? showForces ? 'forces' : showDeformation ? 'deformation' : 'layout' : 'layout',
+      original, modified, member: selected ? `${selected.a}-${selected.b}` : null,
+      showOriginal: comparison !== 'modified', showModified: comparison !== 'original', showLabels: true, showGrid: true, showDimensions: true,
+      ...camera,
+      onLoad: joint => { if (!readOnly) onLoadChange(LOAD_NODE_IDS[joint - 1]!); },
+      onPick: panel => { if (!locked && !readOnly) onPanelChange(PANEL_IDS[panel - 1]!); }, onMember: pickMember,
+    });
+    svg.setAttribute('role', 'group');
+    // Preserve keyboard access and real application member IDs around the original visual renderer.
+    const loadHandle = svg.querySelector<SVGGElement>('[data-planar-load]');
+    if (loadHandle) {
+      loadHandle.setAttribute('role', 'slider'); loadHandle.setAttribute('tabindex', readOnly ? '-1' : '0');
+      loadHandle.setAttribute('aria-label', 'Load position on bridge'); loadHandle.setAttribute('aria-disabled', String(readOnly));
+      loadHandle.setAttribute('aria-valuemin', '1'); loadHandle.setAttribute('aria-valuemax', '3'); loadHandle.setAttribute('aria-valuenow', String(LOAD_NODE_IDS.indexOf(loadNodeId) + 1));
+      loadHandle.setAttribute('aria-valuetext', `${loadNodeId}, 10 N downward`);
+      loadHandle.onkeydown = event => {
+        if (readOnly) return;
+        const index = LOAD_NODE_IDS.indexOf(loadNodeId);
+        const next = event.key === 'Home' ? 0 : event.key === 'End' ? 2 : ['ArrowLeft', 'ArrowDown'].includes(event.key) ? Math.max(0, index - 1) : ['ArrowRight', 'ArrowUp'].includes(event.key) ? Math.min(2, index + 1) : null;
+        if (next !== null) { event.preventDefault(); onLoadChange(LOAD_NODE_IDS[next]!); }
+      };
     }
-  }
-  function moveKeyboard(event: KeyboardEvent<SVGGElement>) {
-    if (readOnly) return;
-    const index = LOAD_NODE_IDS.indexOf(loadNodeId);
-    const next = event.key === 'Home' ? 0 : event.key === 'End' ? 2 : ['ArrowLeft', 'ArrowDown'].includes(event.key) ? Math.max(0, index - 1) : ['ArrowRight', 'ArrowUp'].includes(event.key) ? Math.min(2, index + 1) : null;
-    if (next !== null) { event.preventDefault(); onLoadChange(LOAD_NODE_IDS[next]!); }
-  }
-  function line(member: Member, analysis?: Analysis, className = 'bridge-member') {
-    const start = nodes.get(member.startNodeId)!;
-    const end = nodes.get(member.endNodeId)!;
-    const u1 = analysis?.displacementMmByNode[start.id];
-    const u2 = analysis?.displacementMmByNode[end.id];
-    const force = (analysis ?? forceAnalysis)?.axialForceNByMember[member.id];
-    const sign = showForces && force !== undefined ? Math.abs(force) < 1e-9 ? 'zero-force' : force > 0 ? 'tension' : 'compression' : '';
-    return <g key={member.id} role={analysis ? undefined : "button"} tabIndex={analysis ? undefined : 0} aria-label={analysis ? undefined : `Inspect member ${member.id}`} aria-pressed={analysis ? undefined : selectedMemberId === member.id}
-      onClick={event => { if (!analysis) { event.stopPropagation(); onSelectMember?.(member.id); } }}
-      onKeyDown={event => { if (!analysis && ["Enter", " "].includes(event.key)) { event.preventDefault(); onSelectMember?.(member.id); } }}
-      style={{ cursor: analysis ? undefined : "pointer", pointerEvents: analysis ? "none" : undefined }}>
-      {!analysis && <path d={`M${screenX(start.xMm)},${screenY(start.yMm)} L${screenX(end.xMm)},${screenY(end.yMm)}`} stroke="transparent" strokeWidth="18" />}
-      <line data-member-id={member.id} className={`${className} ${analysis ? '' : sign} ${selectedMemberId === member.id ? 'selected-member' : ''}`}
-      style={!analysis && selectedMemberId === member.id ? { stroke: "#e17842", strokeWidth: 6 } : undefined}
-      x1={screenX(start.xMm + (u1?.x ?? 0) * DEFORMATION_SCALE)} y1={screenY(start.yMm + (u1?.y ?? 0) * DEFORMATION_SCALE)}
-      x2={screenX(end.xMm + (u2?.x ?? 0) * DEFORMATION_SCALE)} y2={screenY(end.yMm + (u2?.y ?? 0) * DEFORMATION_SCALE)}>
-      <title>{member.id}: {start.id}–{end.id}{force !== undefined ? `; ${formatForce(force)}` : ''}</title>
-    </line></g>;
-  }
-  return <div className="bridge-canvas">
-    <svg ref={svgRef} className="bridge-svg" viewBox="0 0 680 310" aria-labelledby={`${titleId} ${descriptionId}`}>
-      <title id={titleId}>Four-panel bridge with a 10 N load at {loadNodeId}{panelId ? ` and brace ${panelId}` : ''}</title>
-      <desc id={descriptionId}>B0 is pinned; B4 is a vertical roller. Crossed bars are not joined. Use the load handle with arrow keys or the load controls. {results && showDeformation ? 'Displacements are magnified 200 times for both designs.' : 'The drawing shows undeformed geometry.'}</desc>
-      {PANEL_IDS.map((id, i) => <g key={id} aria-hidden="true" onClick={() => { if (!locked && !readOnly) onPanelChange(id); }} className={locked ? '' : 'panel-target'}>
-        <rect x={70 + i * 135} y="64" width="135" height="135" rx="5" className={panelId === id ? 'panel-zone selected' : 'panel-zone'} />
-        <text x={137.5 + i * 135} y="45" textAnchor="middle" className={panelId === id ? 'panel-label selected' : 'panel-label'}>{id}</text>
-      </g>)}
-      <g className="baseline-members">{baseline.members.map(member => line(member))}</g>
-      {panelId && comparison !== 'original' && line(createBraceMember(panelId), undefined, 'preview-brace')}
-      {results && showDeformation && <g aria-label="Magnified displacement overlays" className="deformation-overlays">
-        {comparison !== 'modified' && <g data-overlay="original">{results.baseline.design.members.map(member => line(member, results.baseline.analysis, 'deformed original'))}</g>}
-        {comparison !== 'original' && candidate && <g data-overlay="modified">{candidate.design.members.map(member => line(member, candidate.analysis, 'deformed modified'))}</g>}
-      </g>}
-      <g className="support-symbols" aria-label="B0 pin support and B4 roller support">
-        <path d="M70 194 l-13 19 h26 Z M48 218 h44 M610 194 l-13 19 h26 Z M588 227 h44" />
-        <circle cx="602" cy="219" r="4" /><circle cx="618" cy="219" r="4" />
-      </g>
-      {forceAnalysis && <g className="support-reactions" aria-label="Support reactions">{Object.entries(forceAnalysis.reactionNByNode).map(([id, reaction]) => {
-        const node = nodes.get(id);
-        if (!node) return null;
-        return <g key={id}><path d={`M${screenX(node.xMm)} 272 V235 m-5 7 5 -7 5 7`} fill="none" stroke="#486953" strokeWidth="2" /><text x={screenX(node.xMm)} y="289" textAnchor="middle" fontSize="10" fill="#486953">Ry {reaction.y.toFixed(2)} N</text></g>;
-      })}</g>}
-      {baseline.nodes.map(node => <g key={node.id} className="bridge-node" data-node-id={node.id}>
-        <circle cx={screenX(node.xMm)} cy={screenY(node.yMm)} r="5" />
-        <text x={screenX(node.xMm)} y={screenY(node.yMm) - 14} textAnchor="middle">{node.id}</text>
-      </g>)}
-      <g role="slider" tabIndex={readOnly ? -1 : 0} aria-disabled={readOnly} aria-label="Load position on bridge" aria-valuemin={1} aria-valuemax={3}
-        aria-valuenow={LOAD_NODE_IDS.indexOf(loadNodeId) + 1} aria-valuetext={`${loadNodeId}, 10 N downward`} aria-orientation="horizontal"
-        className="load-handle" onKeyDown={moveKeyboard}
-        onPointerDown={event => { if (readOnly || event.button !== 0) return; event.preventDefault(); event.currentTarget.focus(); dragging.current = event.pointerId; lastSnap.current = loadNodeId; event.currentTarget.setPointerCapture(event.pointerId); movePointer(event); }}
-        onPointerMove={event => { if (dragging.current === event.pointerId) movePointer(event); }}
-        onPointerUp={event => { if (dragging.current === event.pointerId) { movePointer(event); dragging.current = null; event.currentTarget.releasePointerCapture(event.pointerId); } }}
-        onPointerCancel={() => { dragging.current = null; }} onLostPointerCapture={() => { dragging.current = null; }}>
-        <rect x={loadX - 48} y="199" width="96" height="96" rx="9" className="load-hit-area" />
-        <path d={`M${loadX} 205 V253 m-9 -11 9 11 9 -11`} />
-        <text x={loadX + 22} y="242">10 N</text>
-        <text x={loadX} y="297" textAnchor="middle" className="drag-caption">{readOnly ? 'Saved load' : '↔ drag load'}</text>
-      </g>
-    </svg>
-  </div>;
+    svg.querySelectorAll<SVGGElement>('[data-planar-member]').forEach(element => {
+      const member = modified.members.find(item => `${item.a}-${item.b}` === element.dataset.planarMember);
+      if (!member) return;
+      element.dataset.memberId = member.id; element.setAttribute('role', 'button'); element.setAttribute('tabindex', '0');
+      element.setAttribute('aria-label', `Inspect member ${member.id}`); element.setAttribute('aria-pressed', String(selectedMemberId === member.id));
+      element.onkeydown = event => { if (['Enter', ' '].includes(event.key)) { event.preventDefault(); onSelectMember?.(member.id); } };
+      element.onclick = () => onSelectMember?.(member.id);
+    });
+    svg.querySelectorAll<SVGGElement>('[data-planar-panel]').forEach(element => {
+      element.setAttribute('role', 'button'); element.setAttribute('tabindex', readOnly ? '-1' : '0');
+      element.setAttribute('aria-label', `Preview brace in panel ${element.dataset.planarPanel}`);
+      element.onkeydown = event => { if (!readOnly && !locked && ['Enter', ' '].includes(event.key)) { event.preventDefault(); onPanelChange(PANEL_IDS[Number(element.dataset.planarPanel) - 1]!); } };
+    });
+    if (restoreLoadFocus) loadHandle?.focus();
+    else if (restoreMemberFocus) [...svg.querySelectorAll<SVGGElement>('[data-member-id]')].find(element => element.dataset.memberId === restoreMemberFocus)?.focus();
+  }, [baseline, loadNodeId, panelId, results, comparison, showDeformation, showForces, locked, readOnly, onLoadChange, onPanelChange, selectedMemberId, onSelectMember, size, camera]);
+  return <div ref={sceneRef} className="bridge-canvas" data-zoom={camera.zoom.toFixed(3)} style={{ touchAction: 'none' }}><svg ref={svgRef} className="bridge-svg" /></div>;
 }

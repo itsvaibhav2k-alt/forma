@@ -23,7 +23,7 @@ it('opens legacy evidence read-only, preserves its frozen sheet, and starts new 
   expect(ranker).not.toHaveBeenCalled();
   await user.click(screen.getByRole('button', { name: 'Captured sheet' }));
   const captured = screen.getByRole('article', { name: 'Captured decision sheet' }).textContent;
-  await user.click(screen.getByRole('button', { name: 'Experiment' }));
+  await user.click(screen.getByRole('button', { name: 'Workbench' }));
   await user.click(screen.getByRole('button', { name: 'Start another prediction' }));
   expect(screen.getByText('Results hidden')).toBeVisible();
   await user.click(screen.getByRole('radio', { name: 'P4' }));

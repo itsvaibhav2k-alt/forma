@@ -25,9 +25,9 @@ it('keeps assembly interactive before and after reveal and follows the selected 
   const results = rankBraces(baseline, { nodeId: 'B1', fxN: 0, fyN: -10 });
   if (results.status === 'error') throw new Error(results.message);
   rerender(<ModelView baseline={baseline} loadNodeId="B1" panelId="P2" results={results} locked />);
-  expect(screen.getByRole('button', { name: 'Fit' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Fit view' })).toBeVisible();
   expect(screen.getByRole('button', { name: 'Isolate' })).toBeVisible();
-  expect(screen.getByText(/Drag to orbit 360/)).toBeVisible();
+  expect(screen.getByText(/Drag to orbit · Scroll/)).toBeVisible();
   rerender(<ModelView baseline={baseline} loadNodeId="B3" panelId="P4" results={null} locked={false} />);
   expect(screen.getByRole('img', { name: /Load at B3, brace in P4/ })).toBeVisible();
   expect(screen.queryByRole('slider')).toBeNull();

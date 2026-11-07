@@ -5,15 +5,13 @@ export function Results({ results, panelId, isRetest }: { results: RankedBraces;
   const chosen = results.candidates[panelId];
   const ordered = [...PANEL_IDS].sort((a, b) => panelRank(results, a) - panelRank(results, b));
   const winners = results.bestIds.join(' + ');
-  return <section className="results-card workspace-card" aria-labelledby="results-heading">
-    <div className="card-heading"><h2 id="results-heading">{isRetest ? 'Same-brace retest' : 'Your prediction, tested'}</h2><span className="tag">Load {results.load.nodeId} · Brace {panelId}</span></div>
-    <div className="verdict"><p className="verdict-lead">{verdictLead(results, panelId, results.load.nodeId)}</p>{!results.bestIds.includes(panelId) && <p className="verdict-note">Best here: {results.bestIds.join(' and ')} at {formatChange(results.candidates[results.bestIds[0]!].change)}.</p>}<p className="verdict-note">Linear-elastic simulation, not a safety rating.</p></div>
-    <div className="result-metrics">
-      <div><span>Original displacement</span><strong>{formatMm(results.baseline.analysis.loadedJointDisplacementMm)} <small>mm</small></strong></div>
-      <div><span>With your {panelId} brace</span><strong>{formatMm(chosen.analysis.loadedJointDisplacementMm)} <small>mm</small></strong></div>
-      <div className="gain-metric"><span>{chosen.change.kind === 'relative' ? 'Deflection reduction' : 'Absolute reduction'}</span><strong>{formatChange(chosen.change)}</strong></div>
-    </div>
-    <details className="ranking-details"><summary>All placements, member forces and reactions</summary>
+  return <section className="results-card dock trial-readout" aria-labelledby="results-heading">
+    <h2 id="results-heading" className="sr-only">{isRetest ? 'Same-brace retest' : 'Your prediction, tested'}</h2>
+    <header className="reading-head"><h3>{isRetest ? 'Retest' : 'Committed result'} · {panelId} at {results.load.nodeId}</h3></header>
+    <dl className="gain-reading"><dt>Less displacement</dt><dd>{formatChange(chosen.change)}</dd></dl>
+    <dl className="measured-pair"><div><dt>Original</dt><dd>{results.baseline.analysis.loadedJointDisplacementMm.toFixed(4)}<small> mm</small></dd></div><div><dt>With brace</dt><dd>{chosen.analysis.loadedJointDisplacementMm.toFixed(4)}<small> mm</small></dd></div></dl>
+    <p className="sr-only">{verdictLead(results, panelId, results.load.nodeId)} Original displacement {formatMm(results.baseline.analysis.loadedJointDisplacementMm)} mm; with brace {formatMm(chosen.analysis.loadedJointDisplacementMm)} mm. {results.bestIds.length > 1 ? 'Tied best' : 'Best'}: {winners}</p>
+    <details className="ranking-details"><summary aria-label="All placements, member forces and reactions">Compare all four placements<span className="sr-only">All placements, member forces and reactions</span></summary>
     <div className="ranking-heading"><h3>All four placements</h3><p>{results.bestIds.length > 1 ? 'Tied best' : 'Best placement'}: <strong>{winners}</strong></p></div>
     <table className="ranking-table"><caption className="sr-only">Brace ranking at {results.load.nodeId}. Lower vertical displacement is better.</caption>
       <thead><tr><th scope="col">Rank / panel</th><th scope="col">Displacement <span>(mm)</span></th><th scope="col">Reduction</th></tr></thead>

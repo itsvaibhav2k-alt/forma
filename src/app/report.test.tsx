@@ -11,7 +11,7 @@ async function prepare() {
   await user.click(screen.getByRole('radio', { name: 'P2' }));
   await user.click(screen.getByRole('button', { name: 'Commit prediction' }));
   await user.click(screen.getByRole('radio', { name: 'B2 Center' }));
-  await user.click(screen.getByRole('button', { name: 'Compare build options' }));
+  await user.click(screen.getByRole('button', { name: 'Build costs' }));
   await user.click(screen.getByRole('button', { name: 'Load fictional example' }));
   return user;
 }
@@ -35,9 +35,9 @@ it('captures the selected B1 trial while B2 is active and keeps that sheet after
   expect(original.querySelectorAll('line')).toHaveLength(34);
   expect(modified.querySelectorAll('line')).toHaveLength(36);
   expect(ranker).toHaveBeenCalledTimes(2);
-  await user.click(screen.getByRole('button', { name: 'Compare build options' }));
+  await user.click(screen.getByRole('button', { name: 'Build costs' }));
   const years = screen.getByLabelText('Horizon (years)'); await user.clear(years); await user.type(years, '5');
-  await user.click(screen.getByRole('button', { name: 'Experiment' }));
+  await user.click(screen.getByRole('button', { name: 'Workbench' }));
   expect(screen.getByRole('region', { name: 'Same-brace retest' })).toHaveTextContent('10.46%');
   await user.click(screen.getByRole('radio', { name: 'B3 Right' }));
   await user.click(screen.getByRole('button', { name: 'Start another prediction' }));
@@ -45,7 +45,7 @@ it('captures the selected B1 trial while B2 is active and keeps that sheet after
   await user.click(screen.getByRole('button', { name: 'Commit prediction' }));
   await user.click(screen.getByRole('button', { name: 'Captured sheet' }));
   expect(screen.getByRole('article', { name: 'Captured decision sheet' }).textContent).toBe(captured);
-  await user.click(screen.getByRole('button', { name: 'Experiment' }));
+  await user.click(screen.getByRole('button', { name: 'Workbench' }));
   await user.click(screen.getByRole('button', { name: 'Capture new sheet' }));
   expect(screen.getByRole('article')).toHaveTextContent('5 years');
   expect(screen.getByRole('article').textContent).not.toBe(captured);
@@ -74,15 +74,15 @@ it('gates capture on a selected trial and valid settings, but allows unknown amo
   await user.click(screen.getByRole('radio', { name: 'P2' }));
   await user.click(screen.getByRole('button', { name: 'Commit prediction' }));
   expect(screen.getByRole('button', { name: 'Decision sheet' })).toBeDisabled();
-  await user.click(screen.getByRole('button', { name: 'Compare build options' }));
+  await user.click(screen.getByRole('button', { name: 'Build costs' }));
   await user.type(screen.getByLabelText('Common scope and level of service'), 'Equal service; quotes pending');
   await user.click(screen.getByRole('button', { name: 'Decision sheet' }));
   expect(screen.getByRole('article')).toHaveTextContent('Unknown');
   expect(screen.getByRole('article')).not.toHaveTextContent('$19,000');
-  await user.click(screen.getByRole('button', { name: 'Compare build options' }));
+  await user.click(screen.getByRole('button', { name: 'Build costs' }));
   await user.clear(screen.getByLabelText('Horizon (years)'));
   expect(screen.getByRole('button', { name: 'Capture new sheet' })).toBeDisabled();
-  await user.click(screen.getByRole('button', { name: 'Experiment' }));
+  await user.click(screen.getByRole('button', { name: 'Workbench' }));
   await user.click(screen.getByRole('button', { name: 'Start another prediction' }));
   expect(screen.getByRole('button', { name: 'Capture new sheet' })).toBeDisabled();
   await user.click(screen.getByRole('button', { name: 'Captured sheet' }));

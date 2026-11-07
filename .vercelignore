@@ -1,0 +1,7 @@
+output/
+coverage/
+node_modules/
+dist/
+.env
+.env.*
+.git

@@ -30,7 +30,7 @@ it('includes only matching cases, keeps saved reports frozen after removal and n
   await saveReading(user, 'Saved B1 · With brace P2', 'QA-only B1 observation, not a physical test.');
   await saveReading(user, 'Retest B2 · With brace P2', 'QA-only B2 observation, not a physical test.');
   expect(screen.getAllByText(/Inconclusive for resolving/)).toHaveLength(2);
-  await user.click(screen.getByRole('button', { name: 'Compare build options' }));
+  await user.click(screen.getByRole('button', { name: 'Build costs' }));
   await user.click(screen.getByRole('button', { name: 'Load fictional example' }));
   expect(screen.getByText(/1 matching observation\(s\) included; 1 from other cases excluded/)).toBeVisible();
   await user.click(screen.getByRole('button', { name: 'Decision sheet' }));
@@ -60,7 +60,7 @@ it('preserves separate case drafts across navigation, handles invalid entries, a
   expect(screen.getByLabelText(rawLabel)).toHaveValue('');
   await user.selectOptions(screen.getByLabelText('Design and load case'), screen.getByRole('option', { name: 'Saved B1 · Original' }));
   expect(screen.getByLabelText(rawLabel)).toHaveValue('0');
-  await user.click(screen.getByRole('button', { name: 'Compare build options' }));
+  await user.click(screen.getByRole('button', { name: 'Build costs' }));
   await user.click(screen.getByRole('button', { name: 'Physical evidence' }));
   expect(screen.getByLabelText(rawLabel)).toHaveValue('0');
   await user.type(screen.getByLabelText('Instrument resolution (mm)'), '0.1');
@@ -77,7 +77,7 @@ it('excludes another brace design and keeps the separately captured template unc
   const captured = template.innerHTML;
   expect(within(template).getByRole('heading', { level: 1 })).toHaveTextContent('With brace P2');
   expect(screen.queryByRole('article', { name: 'Captured decision sheet' })).toBeNull();
-  await user.click(screen.getByRole('button', { name: 'Experiment' }));
+  await user.click(screen.getByRole('button', { name: 'Workbench' }));
   await user.click(screen.getByRole('button', { name: 'Start another prediction' }));
   await user.click(screen.getByRole('radio', { name: 'P4' }));
   await user.click(screen.getByRole('button', { name: 'Commit prediction' }));

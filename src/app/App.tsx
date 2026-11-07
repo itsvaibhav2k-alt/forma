@@ -64,21 +64,26 @@ export function App({ ranker = rankBraces, initialWorkspace, onWorkspaceChange, 
   }
 
   return (
-    <div className={`app-shell ${view === 'experiment' ? 'experiment-shell' : ''}`}>
+    <div className={`app-shell studio-app ${view === 'experiment' ? 'experiment-shell' : ''}`}>
       <a className="skip-link" href="#workspace">Skip to workspace</a>
       <header className="site-header">
         <a className="wordmark" href="/" aria-label="Forma home">
-          <img src="/forma.svg" width="36" height="36" alt="" />
+          <span className="studio-symbol" aria-hidden="true"><svg viewBox="0 0 28 30" fill="none"><path fill="currentColor" d="M2 10.8 24.8 2v5.5L8.4 13.9v3.2l13.1-5.1v5.3L8.4 22.4v5.1L2 30z" /></svg></span>
           <span>Forma<span className="studio-wordmark">Studio</span></span>
         </a>
         <nav className="navigation" aria-label="Workbench views">
-          <button type="button" aria-current={view === 'experiment' ? 'page' : undefined} onClick={() => setView('experiment')}>Experiment</button>
-          <button type="button" aria-current={view === 'costs' ? 'page' : undefined} onClick={() => setView('costs')}>Compare build options</button>
+          <button type="button" aria-current={view === 'experiment' ? 'page' : undefined} onClick={() => { setView('experiment'); window.scrollTo({ top: 0 }); }}><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M3.5 9.3h17M9 9.5v11"/></svg>Workbench</button>
+          <button type="button" aria-current={view === 'costs' ? 'page' : undefined} onClick={() => { setView('costs'); window.scrollTo({ top: 0 }); }}><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 4h14v16l-2-1.3-2 1.3-3-1.3-3 1.3L7 19l-2 1zM8.5 8H16m-7.5 4h6m-6 3.5H12"/></svg>Build costs</button>
           {experiment.state.trials.length > 0 && <button type="button" aria-current={view === 'measurements' ? 'page' : undefined} onClick={() => setView('measurements')}>Physical evidence</button>}
           {report && <button type="button" aria-current={view === 'report' ? 'page' : undefined} onClick={() => setView('report')}>Captured sheet</button>}
           {pattern && <button type="button" aria-current={view === 'template' ? 'page' : undefined} onClick={() => setView('template')}>Captured template</button>}
         </nav>
-        <span className="preview-label"><span aria-hidden="true" />Interactive experiment</span>
+        <span className="studio-document"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m12 3 8.7 4.5v9L12 21l-8.7-4.5v-9zM3.5 7.5 12 12l8.5-4.5M12 12v9" /></svg>Four-panel truss</span>
+        <button className="trial-sheet-button" type="button" onClick={() => {
+          if (report) { setView('report'); window.scrollTo({ top: 0 }); }
+          else if (canCapture) { captureReport(); window.scrollTo({ top: 0 }); }
+          else { setView('experiment'); requestAnimationFrame(() => document.getElementById('report-heading')?.scrollIntoView({ block: 'center' })); }
+        }}><svg aria-hidden="true" viewBox="0 0 20 20"><path d="M5 2h7l3 3v13H5zM12 2v4h3M8 10h4.5M8 13h4.5"/></svg>Trial sheet</button>
       </header>
 
       {projectPanel}
@@ -89,7 +94,7 @@ export function App({ ranker = rankBraces, initialWorkspace, onWorkspaceChange, 
           <h1>{viewCopy[view][0]}</h1>
           <p className="intro">{viewCopy[view][1]}</p>
         </div>
-        <Explainer view={view} open={false} />
+        {view !== 'experiment' && <Explainer view={view} open={false} />}
 
         {view === 'experiment' ? <Experiment baseline={experiment.baseline} {...display} projectStorage={!!onWorkspaceChange}
           trials={experiment.state.trials} isRetest={!inspecting && experiment.state.retest.status !== 'idle'}
@@ -101,6 +106,8 @@ export function App({ ranker = rankBraces, initialWorkspace, onWorkspaceChange, 
           : view === 'measurements' ? <MeasurementWorkbench cases={cases} {...measurements} projectStorage={!!onWorkspaceChange} />
           : view === 'template' ? pattern && <AssemblyTemplate pattern={pattern} />
           : report && <ReportPreview report={report} />}
+
+        {view === 'experiment' && <Explainer view={view} open={false} />}
 
         {(view === 'experiment' || view === 'measurements') && display.trial && <section className="optional-tools" aria-labelledby="optional-heading"><h2 id="optional-heading">Optional physical evidence and pattern</h2><p>Selected saved result: {trialLabel}. Record actual observations or capture a separate, undeformed side-panel pattern from this trial. Printer scale and physical model agreement still need verification.</p><div className="optional-tools-buttons">{view !== 'measurements' && <button className="outline-button" type="button" onClick={() => setView('measurements')}>Record measurements</button>}<button className="outline-button" type="button" onClick={() => capturePattern(false)}>Original assembly template</button><button className="outline-button" type="button" onClick={() => capturePattern(true)}>Braced assembly template</button></div></section>}
 
