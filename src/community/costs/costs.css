@@ -71,6 +71,7 @@
   .quote-amount-row { padding: 18px; }
   .amount-entry-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
   .amount-entry-grid select { font-size: 11px; padding: 8px; }
+  .cost-workbench input, .cost-workbench select, .cost-workbench button, .cost-workbench textarea { min-height: 44px; }
   .cost-workbench input, .cost-workbench textarea { font-size: 16px; }
   .cost-results .section-heading { align-items: flex-start; }
 }
